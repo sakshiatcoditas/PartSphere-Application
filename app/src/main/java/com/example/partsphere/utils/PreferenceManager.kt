@@ -1,5 +1,4 @@
-package com.example.partsphere.presentation.login_screen
-
+package com.example.partsphere.utils
 
 import android.content.Context
 import android.content.SharedPreferences
