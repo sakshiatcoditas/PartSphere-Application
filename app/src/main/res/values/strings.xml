@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">PartSphere</string>
+    <string name="error_full_name_required">Full name is required</string>
+    <string name="error_full_name_invalid">Invalid name format</string>
+    <string name="error_email_required">Email is required</string>
+    <string name="error_email_invalid">Invalid email</string>
+    <string name="error_phone_invalid">Enter a valid 10-digit phone number</string>
+
+    <!-- Company Details -->
+    <string name="error_company_name_required">Company name is required</string>
+    <string name="error_company_name_invalid">Invalid company name</string>
+    <string name="error_gst_invalid">Invalid GST ID</string>
+    <string name="error_address_short">Address too short</string>
+    <string name="error_city_required">City is required</string>
+    <string name="error_city_invalid">Invalid city name</string>
+    <string name="error_state_required">Select a state</string>
+    <string name="error_pincode_invalid">Invalid pincode</string>
+
+    <!-- Password -->
+    <string name="error_password_invalid">Password must have 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char</string>
+    <string name="error_confirm_password_mismatch">Passwords do not match</string>
+</resources>
