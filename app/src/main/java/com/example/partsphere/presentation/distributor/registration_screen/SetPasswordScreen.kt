@@ -1,8 +1,9 @@
 package com.example.partsphere.presentation.distributor.registration_screen
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
@@ -12,10 +13,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.partsphere.ui.theme.Black
 import com.example.partsphere.utils.RegistrationState
+import com.example.partsphere.utils.Field
 import com.example.partsphere.viewmodel.RegistrationViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -25,11 +28,12 @@ fun SetPasswordScreen(
     onBackClick: () -> Unit,
     onRegisterClick: () -> Unit
 ) {
-    val fieldErrors by remember { derivedStateOf { viewModel.fieldErrors } }
     val context = LocalContext.current
 
-// Observe registration state
-    val registrationState by remember { derivedStateOf { viewModel.registrationState } }
+
+// Directly observe state (not derivedStateOf)
+    val registrationState = viewModel.registrationState
+    val fieldErrors = viewModel.fieldErrors
 
 // Automatically navigate on success
     LaunchedEffect(registrationState) {
@@ -44,7 +48,11 @@ fun SetPasswordScreen(
                 title = { Text("Set Password", fontSize = 20.sp, color = Black, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Black)
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Black
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White, titleContentColor = Black),
@@ -52,6 +60,7 @@ fun SetPasswordScreen(
             )
         }
     ) { padding ->
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -68,9 +77,10 @@ fun SetPasswordScreen(
                 label = { Text("Password", color = Black) },
                 visualTransformation = PasswordVisualTransformation(),
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
             )
-            fieldErrors[com.example.partsphere.utils.Field.PASSWORD]?.let { error ->
+            fieldErrors[Field.PASSWORD]?.let { error ->
                 Text(text = error, color = Color.Red, fontSize = 12.sp)
             }
 
@@ -82,9 +92,10 @@ fun SetPasswordScreen(
                 label = { Text("Confirm Password", color = Black) },
                 visualTransformation = PasswordVisualTransformation(),
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
             )
-            fieldErrors[com.example.partsphere.utils.Field.CONFIRM_PASSWORD]?.let { error ->
+            fieldErrors[Field.CONFIRM_PASSWORD]?.let { error ->
                 Text(text = error, color = Color.Red, fontSize = 12.sp)
             }
 
@@ -92,8 +103,10 @@ fun SetPasswordScreen(
 
             Button(
                 onClick = { viewModel.performRegistration(context) },
-                modifier = Modifier.fillMaxWidth().height(50.dp),
-                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Black, contentColor = Color.White)
             ) {
                 Text("Register", fontSize = 18.sp)
@@ -101,14 +114,14 @@ fun SetPasswordScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            // Display state feedback
+            // Show loading or error
             when (registrationState) {
                 is RegistrationState.Loading -> {
                     CircularProgressIndicator(modifier = Modifier.padding(top = 16.dp))
                 }
                 is RegistrationState.Error -> {
                     Text(
-                        text = (registrationState as RegistrationState.Error).field,
+                        text = registrationState.field,
                         color = Color.Red,
                         modifier = Modifier.padding(top = 16.dp)
                     )
@@ -117,5 +130,6 @@ fun SetPasswordScreen(
             }
         }
     }
+
 
 }

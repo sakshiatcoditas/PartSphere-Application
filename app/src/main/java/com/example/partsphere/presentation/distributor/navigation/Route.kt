@@ -7,5 +7,7 @@ Route(val route: String) {
     CompanyDetails("company_details"),
     SetPassword("set_password"),
     Success("success"),
-    Login("login")
+    Login("login"),
+    Home("home")
+
 }

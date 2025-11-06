@@ -5,79 +5,63 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.partsphere.presentation.distributor.registration_screen.CompanyDetailsScreen
-import com.example.partsphere.presentation.distributor.registration_screen.RegisterScreen
-import com.example.partsphere.presentation.distributor.registration_screen.SetPasswordScreen
-import com.example.partsphere.presentation.distributor.registration_screen.SuccessScreen
+import com.example.partsphere.presentation.login_screen.LoginScreen
+import com.example.partsphere.presentation.login_screen.LoginViewModel
+import com.example.partsphere.presentation.distributor.registration_screen.*
+import com.example.partsphere.presentation.login_screen.HomeScreen
 import com.example.partsphere.viewmodel.RegistrationViewModel
 
 @Composable
 fun RegistrationNavGraph(navController: NavHostController) {
-    val viewModel: RegistrationViewModel = hiltViewModel() // Shared across all screens
+    val viewModel: RegistrationViewModel = hiltViewModel()
+    val loginViewModel: LoginViewModel = hiltViewModel() // Shared login VM
 
-    NavHost(
-        navController = navController,
-        startDestination = Route.PersonalDetails.route
-    ) {
+    NavHost(navController = navController, startDestination = Route.Login.route) {
 
-        // ------------------- Personal Details -------------------
-        composable(Route.PersonalDetails.route) {
-            RegisterScreen(
-                viewModel = viewModel,
-                onProceedClick = {
-                    // Validate Personal Details before navigating
-                    if (viewModel.validatePersonalDetails()) {
-                        navController.navigate(Route.CompanyDetails.route)
-                    }
-                },
-                onLoginClick = {
-                    navController.navigate(Route.Login.route)
-                }
+        composable(Route.Login.route) {
+            LoginScreen(
+                viewModel = loginViewModel,
+                onNavigateToRegister = { navController.navigate(Route.PersonalDetails.route) },
+                onNavigateToForgotPassword = { /* Handle forgot password */ },
+                onLoginSuccess = { navController.navigate(Route.Home.route) {
+                    popUpTo(Route.Login.route) { inclusive = true }
+                } }
             )
         }
 
-        // ------------------- Company Details -------------------
+        composable(Route.Home.route) {
+
+            HomeScreen()
+        }
+
+        // Example: Registration flow screens
+        composable(Route.PersonalDetails.route) {
+            RegisterScreen(
+                viewModel = viewModel,
+                onProceedClick = { if (viewModel.validatePersonalDetails()) navController.navigate(Route.CompanyDetails.route) },
+                onLoginClick = { navController.navigate(Route.Login.route) }
+            )
+        }
+
         composable(Route.CompanyDetails.route) {
             CompanyDetailsScreen(
                 viewModel = viewModel,
                 onBackClick = { navController.popBackStack() },
-                onProceedClick = {
-                    // Validate Company Details before navigating
-                    if (viewModel.validateCompanyDetails()) {
-                        navController.navigate(Route.SetPassword.route)
-                    }
-                }
+                onProceedClick = { if (viewModel.validateCompanyDetails()) navController.navigate(Route.SetPassword.route) }
             )
         }
 
-        //  Set Password Screen
         composable(Route.SetPassword.route) {
-            val viewModel: RegistrationViewModel = hiltViewModel() // get the shared ViewModel
-
             SetPasswordScreen(
                 viewModel = viewModel,
-                onBackClick = {
-                    navController.popBackStack() // goes back to company details
-                },
-                onRegisterClick = {
-                    // final validation already done inside SetPasswordScreen
-                    // Navigate to success screen
-                    navController.navigate(Route.Success.route) {
-                        popUpTo(Route.PersonalDetails.route) { inclusive = true }
-                    }
-                }
+                onBackClick = { navController.popBackStack() },
+                onRegisterClick = { navController.navigate(Route.Success.route) { popUpTo(Route.PersonalDetails.route) { inclusive = true } } }
             )
         }
 
-
-        // ------------------- Success -------------------
         composable(Route.Success.route) {
             SuccessScreen(
-                onBackToLoginClick = {
-                    navController.navigate(Route.Login.route) {
-                        popUpTo(Route.PersonalDetails.route) { inclusive = true }
-                    }
-                }
+                onBackToLoginClick = { navController.navigate(Route.Login.route) { popUpTo(Route.PersonalDetails.route) { inclusive = true } } }
             )
         }
     }
