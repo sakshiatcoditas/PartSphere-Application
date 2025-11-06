@@ -1,10 +1,10 @@
-package com.example.partsphere.presentation.login_screen
-
-
+package com.example.partsphere.presentation.login_screen.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-
+import com.example.partsphere.presentation.login_screen.AuthState
+import com.example.partsphere.presentation.login_screen.repository.LoginRepository
+import com.example.partsphere.presentation.login_screen.PreferenceManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -32,7 +32,9 @@ class LoginViewModel @Inject constructor(
 
                     if (body != null && body.token != null) {
                         prefs.saveToken(body.token) // Save token
-                        _authState.value = AuthState.Success(body.message ?: "Login successful")
+                        _authState.value = AuthState.Success(
+                            body.message ?: "Login successful",
+                            role = body.role )
                     }
 
                     else {

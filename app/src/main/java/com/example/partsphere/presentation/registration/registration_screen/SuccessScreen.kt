@@ -1,4 +1,4 @@
-package com.example.partsphere.presentation.distributor.registration_screen
+package com.example.partsphere.presentation.registration.registration_screen
 
 
 

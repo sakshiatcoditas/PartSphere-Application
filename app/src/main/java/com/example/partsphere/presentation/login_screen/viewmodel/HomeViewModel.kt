@@ -1,6 +1,7 @@
-package com.example.partsphere.presentation.login_screen
+package com.example.partsphere.presentation.login_screen.viewmodel
 
 import androidx.lifecycle.ViewModel
+import com.example.partsphere.presentation.login_screen.PreferenceManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
@@ -10,5 +11,3 @@ class HomeViewModel @Inject constructor(
 ): ViewModel() {
     val token get() = prefs.getToken() ?: "No token found"
 }
-
-

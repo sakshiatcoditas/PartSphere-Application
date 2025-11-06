@@ -16,13 +16,14 @@ import kotlinx.coroutines.flow.collectLatest
 import com.example.partsphere.R
 import com.example.partsphere.ui.theme.Black
 import androidx.compose.runtime.collectAsState
+import com.example.partsphere.presentation.login_screen.viewmodel.LoginViewModel
 
 @Composable
 fun LoginScreen(
     viewModel: LoginViewModel,
     onNavigateToRegister: () -> Unit,
     onNavigateToForgotPassword: () -> Unit,
-    onLoginSuccess: () -> Unit
+    onLoginSuccess: (role: String) -> Unit
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -33,7 +34,10 @@ fun LoginScreen(
         viewModel.authState.collectLatest { state ->
             when (state) {
                 is AuthState.Error -> snackbarHostState.showSnackbar(state.message)
-                is AuthState.Success -> onLoginSuccess()
+                is AuthState.Success -> {
+                    val role = state.role ?: "UNKNOWN"
+                    onLoginSuccess(role)
+                }
                 else -> {}
             }
         }

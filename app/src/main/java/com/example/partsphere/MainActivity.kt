@@ -5,9 +5,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.navigation.compose.rememberNavController
-import com.example.partsphere.presentation.distributor.navigation.RegistrationNavGraph
+import com.example.partsphere.presentation.login_screen.navigation.LoginNavGraph
+import com.example.partsphere.presentation.registration.navigation.RegistrationNavGraph
 
-import com.example.partsphere.presentation.distributor.registration_screen.RegisterScreen
 import com.example.partsphere.ui.theme.PartSphereTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -21,7 +21,8 @@ class MainActivity : ComponentActivity() {
 
 
                 val navController = rememberNavController()
-                RegistrationNavGraph(navController = navController)
+                //RegistrationNavGraph(navController = navController)
+                LoginNavGraph(navController = navController)
             }
         }
     }

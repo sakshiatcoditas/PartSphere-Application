@@ -7,10 +7,9 @@ import com.example.partsphere.model.UserRegistrationData
 import com.example.partsphere.network.DistributorApi
 import com.example.partsphere.utils.MultipartUtils
 import retrofit2.Response
-import androidx.core.net.toUri
+
 import javax.inject.Inject
-import okhttp3.RequestBody
-import okhttp3.MultipartBody
+
 
 class DistributorRepository @Inject constructor(
     private val api: DistributorApi

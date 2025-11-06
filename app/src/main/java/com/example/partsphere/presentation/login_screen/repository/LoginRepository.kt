@@ -1,4 +1,4 @@
-package com.example.partsphere.presentation.login_screen
+package com.example.partsphere.presentation.login_screen.repository
 
 import com.example.partsphere.network.DistributorApi
 import com.example.partsphere.presentation.login_screen.model.LoginRequest

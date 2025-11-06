@@ -1,4 +1,4 @@
-package com.example.partsphere.presentation.distributor.navigation
+package com.example.partsphere.presentation.registration.navigation
 
 sealed class RegistrationRoute(val route: String) {
 

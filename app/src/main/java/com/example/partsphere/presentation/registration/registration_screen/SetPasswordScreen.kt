@@ -1,6 +1,5 @@
-package com.example.partsphere.presentation.distributor.registration_screen
+package com.example.partsphere.presentation.registration.registration_screen
 
-import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions

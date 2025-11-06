@@ -1,4 +1,4 @@
-package com.example.partsphere.presentation.distributor.navigation
+package com.example.partsphere.presentation.registration.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -6,8 +6,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.partsphere.presentation.login_screen.LoginScreen
-import com.example.partsphere.presentation.login_screen.LoginViewModel
-import com.example.partsphere.presentation.distributor.registration_screen.*
+import com.example.partsphere.presentation.login_screen.viewmodel.LoginViewModel
+import com.example.partsphere.presentation.registration.registration_screen.*
 import com.example.partsphere.presentation.login_screen.HomeScreen
 import com.example.partsphere.viewmodel.RegistrationViewModel
 
@@ -16,7 +16,7 @@ fun RegistrationNavGraph(navController: NavHostController) {
     val viewModel: RegistrationViewModel = hiltViewModel()
     val loginViewModel: LoginViewModel = hiltViewModel() // Shared login VM
 
-    NavHost(navController = navController, startDestination = Route.Login.route) {
+    NavHost(navController = navController, startDestination = Route.PersonalDetails.route) {
 
         composable(Route.Login.route) {
             LoginScreen(
