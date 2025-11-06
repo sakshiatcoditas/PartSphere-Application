@@ -1,18 +1,19 @@
 package com.example.partsphere.model
 
+import android.net.Uri
 
 
 data class UserRegistrationData(
-    var photoUrl: String? = null,       // optional
-    var fullName: String = "",
+    var username: String = "",         // was fullName
     var email: String = "",
-    var phoneNumber: String = "",
-    var companyName: String = "",
-    var gstId: String = "",
-    var address: String = "",
-    var city: String = "",
-    var state: String = "",
-    var pincode: String = "",
     var password: String = "",
-    var confirmPassword: String = ""
+    var phoneNo: String = "",          // was phoneNumber
+    var companyName: String = "",
+    var companyAddress: String = "",   // was address
+    var gstId: String = "",
+    var state: String = "",
+    var city: String = "",
+    var pinCode: Int = 0,              // was String, backend expects int
+    var photo: Uri? = null             // was photoUrl
 )
+

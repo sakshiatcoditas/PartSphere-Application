@@ -76,8 +76,8 @@ fun CompanyDetailsScreen(
 
             InputField(
                 label = "Address",
-                value = viewModel.address,
-                onValueChange = { viewModel.address = it },
+                value = viewModel.companyAddress,
+                onValueChange = { viewModel.companyAddress = it },
                 error = fieldErrors[Field.ADDRESS]
             )
             Spacer(Modifier.height(16.dp))
@@ -153,8 +153,8 @@ fun CompanyDetailsScreen(
 
             InputField(
                 label = "Pincode",
-                value = viewModel.pincode,
-                onValueChange = { viewModel.pincode = it },
+                value = viewModel.pinCode,
+                onValueChange = { viewModel.pinCode = it },
                 error = fieldErrors[Field.PINCODE],
                 keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
             )

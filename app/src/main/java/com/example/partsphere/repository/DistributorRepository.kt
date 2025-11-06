@@ -1,42 +1,65 @@
 package com.example.partsphere.repository
 
-
-
-import com.example.partsphere.model.DistributorRegistrationRequest
+import android.content.Context
+import android.net.Uri
 import com.example.partsphere.model.DistributorRegistrationResponse
 import com.example.partsphere.model.UserRegistrationData
 import com.example.partsphere.network.DistributorApi
-
+import com.example.partsphere.utils.MultipartUtils
 import retrofit2.Response
+import androidx.core.net.toUri
+import javax.inject.Inject
+import okhttp3.RequestBody
+import okhttp3.MultipartBody
 
-class DistributorRepository(private val api: DistributorApi) {
+class DistributorRepository @Inject constructor(
+    private val api: DistributorApi
+) {
 
-    suspend fun registerDistributor(user: UserRegistrationData): Result<DistributorRegistrationResponse> {
+
+    suspend fun registerDistributor(
+        context: Context,
+        user: UserRegistrationData
+    ): Result<DistributorRegistrationResponse> {
         return try {
-            val request = DistributorRegistrationRequest(
-                username = user.fullName,
-                email = user.email,
-                phoneNo = user.phoneNumber,
-                companyName = user.companyName,
-                gstId = user.gstId.takeIf { it.isNotBlank() },
-                companyAddress = user.address,
-                city = user.city,
-                photo = user.photoUrl,  // optional
-                state = user.state,
-                pinCode = user.pincode.toIntOrNull() ?: 0,
-                password = user.password
-            )
+            // ----------- LOGGING THE FIELDS -----------
+            android.util.Log.d("RegistrationRepo", "Sending registration data:")
+            android.util.Log.d("RegistrationRepo", "username: ${user.username}")
+            android.util.Log.d("RegistrationRepo", "email: ${user.email}")
+            android.util.Log.d("RegistrationRepo", "password: ${user.password}")
+            android.util.Log.d("RegistrationRepo", "phoneNo: ${user.phoneNo}")
+            android.util.Log.d("RegistrationRepo", "companyName: ${user.companyName}")
+            android.util.Log.d("RegistrationRepo", "companyAddress: ${user.companyAddress}")
+            android.util.Log.d("RegistrationRepo", "gstId: ${user.gstId}")
+            android.util.Log.d("RegistrationRepo", "state: ${user.state}")
+            android.util.Log.d("RegistrationRepo", "city: ${user.city}")
+            android.util.Log.d("RegistrationRepo", "pinCode: ${user.pinCode}")
+            android.util.Log.d("RegistrationRepo", "photo: ${user.photo?.path ?: "null"}")
+            // -----------------------------------------
 
-            val response: Response<DistributorRegistrationResponse> = api.registerDistributor(request)
+            val response: Response<DistributorRegistrationResponse> = api.registerDistributor(
+                username = MultipartUtils.createPartFromString(user.username),
+                email = MultipartUtils.createPartFromString(user.email),
+                password = MultipartUtils.createPartFromString(user.password),
+                phoneNo = MultipartUtils.createPartFromString(user.phoneNo),
+                companyName = MultipartUtils.createPartFromString(user.companyName),
+                companyAddress = MultipartUtils.createPartFromString(user.companyAddress),
+                gstId = user.gstId.takeIf { it.isNotBlank() }?.let { MultipartUtils.createPartFromString(it) },
+                state = MultipartUtils.createPartFromString(user.state),
+                city = MultipartUtils.createPartFromString(user.city),
+                pinCode = MultipartUtils.createPartFromString(user.pinCode.toString()),
+                photo = user.photo?.let { MultipartUtils.prepareFilePart(context, "photo", it) }
+            )
 
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!)
             } else {
-                // Parse error body or return generic message
                 Result.failure(Exception(response.errorBody()?.string() ?: "Unknown error"))
             }
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
+
+
 }

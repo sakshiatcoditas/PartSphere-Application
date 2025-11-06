@@ -36,7 +36,7 @@ fun RegisterScreen(
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        viewModel.avatarUri = uri
+        viewModel.photoUri = uri
     }
 
     Scaffold { padding ->
@@ -64,9 +64,9 @@ fun RegisterScreen(
                     .clickable { launcher.launch("image/*") },
                 contentAlignment = Alignment.Center
             ) {
-                if (viewModel.avatarUri != null) {
+                if (viewModel.photoUri != null) {
                     Image(
-                        painter = rememberAsyncImagePainter(viewModel.avatarUri),
+                        painter = rememberAsyncImagePainter(viewModel.photoUri),
                         contentDescription = "Avatar",
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
@@ -81,10 +81,11 @@ fun RegisterScreen(
             // Input Fields
             InputField(
                 label = "Full Name",
-                value = viewModel.fullName,
-                onValueChange = { viewModel.fullName = it },
+                value = viewModel.username,
+                onValueChange = { viewModel.username = it },
                 error = fieldErrors[Field.FULL_NAME]
             )
+
             Spacer(Modifier.height(16.dp))
 
             InputField(
@@ -97,8 +98,8 @@ fun RegisterScreen(
 
             InputField(
                 label = "Phone Number",
-                value = viewModel.phoneNumber,
-                onValueChange = { viewModel.phoneNumber = it },
+                value = viewModel.phoneNo,
+                onValueChange = { viewModel.phoneNo = it },
                 error = fieldErrors[Field.PHONE]
             )
             Spacer(Modifier.height(32.dp))

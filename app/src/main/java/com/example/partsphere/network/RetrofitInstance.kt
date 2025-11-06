@@ -1,19 +1,41 @@
 package com.example.partsphere.network
 
-
-
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import javax.inject.Singleton
 
+@Module
+@InstallIn(SingletonComponent::class)
 object RetrofitInstance {
 
-    private const val BASE_URL = "https://your-api-base-url.com" // replace with your Engrock URL
+    private const val BASE_URL = "https://overlavishly-rightish-amelia.ngrok-free.dev/"
 
-    val api: DistributorApi by lazy {
+    @Provides
+    @Singleton
+    fun provideOkHttpClient(): OkHttpClient =
+        OkHttpClient.Builder()
+            .addInterceptor(HttpLoggingInterceptor().apply {
+                level = HttpLoggingInterceptor.Level.BODY
+            })
+            .build()
+
+    @Provides
+    @Singleton
+    fun provideRetrofit(client: OkHttpClient): Retrofit =
         Retrofit.Builder()
             .baseUrl(BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
+            .client(client)
             .build()
-            .create(DistributorApi::class.java)
-    }
+
+    @Provides
+    @Singleton
+    fun provideDistributorApi(retrofit: Retrofit): DistributorApi =
+        retrofit.create(DistributorApi::class.java)
 }
