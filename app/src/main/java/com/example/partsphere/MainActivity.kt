@@ -4,11 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.navigation.compose.rememberNavController
-import com.example.partsphere.presentation.login_screen.DistributorDashboardScreen
-import com.example.partsphere.presentation.login_screen.navigation.LoginNavGraph
-import com.example.partsphere.presentation.owner.OwnerDashboardScreen
-import com.example.partsphere.presentation.registration.navigation.RegistrationNavGraph
+import com.example.partsphere.presentation.owner.ui.OwnerDashboardScreen
 
 import com.example.partsphere.ui.theme.PartSphereTheme
 import dagger.hilt.android.AndroidEntryPoint
