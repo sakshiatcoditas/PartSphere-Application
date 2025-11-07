@@ -19,6 +19,7 @@ import androidx.compose.material3.TextFieldDefaults
 
 
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -27,11 +28,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.partsphere.presentation.owner.navigation.OwnerBottomNavItem
 import com.example.partsphere.presentation.owner.navigation.OwnerNavGraph
 
-// Bottom Navigation Destinations
 
 
+
+
+//-------------------- This has the Scaffold of the Homescreen just this -----------------------
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OwnerDashboardScreen() {
@@ -94,134 +98,163 @@ fun OwnerDashboardScreen() {
 //    }
 //}
 
-@Composable
-fun OwnerHomeScreen() {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
-    ) {
-        Text(
-            text = "Business Overview",
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black
-        )
 
-        // --- Employee Comparison Bar Chart ---
-        val employees = listOf(
-            "Workers" to 50f,
-            "Chiefs" to 10f,
-            "Plant Heads" to 5f
-        )
+//-------------------------Owner HomeScreen---------------------------------
+//@Composable
+//fun OwnerHomeScreen() {
+//    // Make the screen scrollable
+//    LazyColumn(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .background(Color.White)
+//            .padding(16.dp),
+//        verticalArrangement = Arrangement.spacedBy(24.dp)
+//    ) {
+//        item {
+//            Text(
+//                text = "Business Overview",
+//                fontSize = 24.sp,
+//                fontWeight = FontWeight.Bold,
+//                color = Color.Black
+//            )
+//        }
+//
+//        item {
+//            val employees = listOf(
+//                "Workers" to 5000f,
+//                "Chiefs" to 1200f,
+//                "Plant Heads" to 300f
+//            )
+//
+//            ComparisonBarChartCard(
+//                title = "Employee Comparison",
+//                data = employees,
+//                barColor = Color(0xFF222222)
+//            )
+//        }
+//
+//        item {
+//            val factoriesByLocation = listOf(
+//                "Mumbai" to 10_000f,
+//                "Pune" to 6_000f,
+//                "Delhi" to 8_500f,
+//                "Bangalore" to 3_500f
+//            )
+//
+//            ComparisonBarChartCard(
+//                title = "Factories by Location",
+//                data = factoriesByLocation,
+//                barColor = Color(0xFF222222)
+//            )
+//        }
+//    }
+//}
+//
+//@Composable
+//fun ComparisonBarChartCard(
+//    title: String,
+//    data: List<Pair<String, Float>>,
+//    barColor: Color
+//) {
+//    val maxValue = data.maxOfOrNull { it.second } ?: 1f
+//    val maxBarHeight = 160f // adjust bar height if needed
+//
+//    Card(
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .wrapContentHeight(),
+//        shape = RoundedCornerShape(12.dp),
+//        colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
+//    ) {
+//        Column(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(16.dp)
+//        ) {
+//            Text(
+//                text = title,
+//                fontWeight = FontWeight.Bold,
+//                color = Color.Black
+//            )
+//
+//            Spacer(modifier = Modifier.height(16.dp))
+//
+//            // Bars area only
+//            Row(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .height(220.dp),
+//                horizontalArrangement = Arrangement.SpaceEvenly,
+//                verticalAlignment = Alignment.Bottom
+//            ) {
+//                data.forEach { (label, value) ->
+//                    val normalizedHeight = (value / maxValue) * maxBarHeight
+//                    val animatedHeight by animateFloatAsState(
+//                        targetValue = normalizedHeight,
+//                        animationSpec = tween(durationMillis = 1000)
+//                    )
+//
+//                    Column(
+//                        horizontalAlignment = Alignment.CenterHorizontally,
+//                        verticalArrangement = Arrangement.Bottom
+//                    ) {
+//                        // Show number above bar
+//                        Text(
+//                            text = formatNumber(value),
+//                            fontSize = 12.sp,
+//                            color = Color.Black
+//                        )
+//
+//                        Spacer(modifier = Modifier.height(6.dp))
+//
+//                        // Bar itself
+//                        Box(
+//                            modifier = Modifier
+//                                .height(animatedHeight.dp)
+//                                .width(45.dp)
+//                                .background(barColor, RoundedCornerShape(6.dp))
+//                        )
+//
+//                        Spacer(modifier = Modifier.height(8.dp))
+//
+//                        // Label under bar
+//                        Text(
+//                            text = label,
+//                            fontSize = 12.sp,
+//                            color = Color.Black,
+//                            textAlign = TextAlign.Center
+//                        )
+//                    }
+//                }
+//            }
+//        }
+//    }
+//}
+//
+//
+//fun formatNumber(value: Float): String {
+//    return when {
+//        value >= 1_000_000_000 -> String.format("%.1fB", value / 1_000_000_000) // billions
+//        value >= 1_000_000 -> {
+//            val formatted = value / 1_000_000
+//            if (formatted % 1 == 0f) "${formatted.toInt()}M" else String.format("%.1fM", formatted)
+//        }
+//        value >= 1_000 -> {
+//            val formatted = value / 1_000
+//            if (formatted % 1 == 0f) "${formatted.toInt()}K" else String.format("%.1fK", formatted)
+//        }
+//        else -> value.toInt().toString()
+//    }
+//}
 
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFf0f0f0))
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.SpaceEvenly
-            ) {
-                Text(
-                    text = "Employee Comparison",
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.Bottom
-                ) {
-                    employees.forEach { (label, value) ->
-                        val animatedHeight by animateFloatAsState(
-                            targetValue = value,
-                            animationSpec = tween(durationMillis = 1000)
-                        )
-
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Bottom
-                        ) {
-                            // Number on top of the bar
-                            Text(
-                                text = value.toInt().toString(),
-                                fontSize = 12.sp,
-                                color = Color.Black
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-
-                            Box(
-                                modifier = Modifier
-                                    .height(animatedHeight.dp)
-                                    .width(40.dp)
-                                    .background(Color.Black, RoundedCornerShape(4.dp))
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(label, fontSize = 12.sp, color = Color.Black)
-                        }
-                    }
-                }
-            }
-        }
-
-        // --- Total Factories Card ---
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(100.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFf0f0f0))
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text("Total Factories", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                Spacer(modifier = Modifier.height(8.dp))
-                Text("5", fontSize = 28.sp, fontWeight = FontWeight.ExtraBold, color = Color.Black) // Placeholder value
-            }
-        }
-    }
-}
 
 
-@Composable
-fun ReportsScreen() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White),
-        contentAlignment = Alignment.Center
-    ) {
-        Text("Reports Screen", color = Color.Black, fontSize = 24.sp)
-    }
-}
 
-@Composable
-fun ManageEmployeeScreen() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White),
-        contentAlignment = Alignment.Center
-    ) {
-        Text("Manage Employees", color = Color.Black, fontSize = 24.sp)
-    }
-}
+
+
+
+
+
 
 //@OptIn(ExperimentalMaterial3Api::class)
 //@Composable
@@ -350,14 +383,3 @@ fun ManageEmployeeScreen() {
 
 
 
-@Composable
-fun ProfileScreen() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White),
-        contentAlignment = Alignment.Center
-    ) {
-        Text("Profile Screen", color = Color.Black, fontSize = 24.sp)
-    }
-}
