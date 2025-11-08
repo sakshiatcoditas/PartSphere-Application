@@ -3,6 +3,7 @@ package com.example.partsphere.network
 import com.example.partsphere.model.DistributorRegistrationResponse
 import com.example.partsphere.presentation.login_screen.model.LoginRequest
 import com.example.partsphere.presentation.login_screen.model.LoginResponse
+import com.example.partsphere.presentation.owner.model.AddCOResponse
 import com.example.partsphere.presentation.owner.model.CreateFactoryRequest
 import com.example.partsphere.presentation.owner.model.CreateFactoryResponse
 import com.example.partsphere.presentation.owner.model.DeleteFactoryResponse
@@ -80,6 +81,14 @@ interface DistributorApi {
     suspend fun deleteFactory(
         @Path("id") factoryId: Int
     ): Response<DeleteFactoryResponse>
+
+    @Multipart
+    @POST("/api/users/centralofficer")
+    suspend fun addCentralOfficer(
+        @Part("username") username: RequestBody,
+        @Part("email") email: RequestBody,
+        @Part photo: MultipartBody.Part?
+    ): Response<AddCOResponse>
 
 
 }

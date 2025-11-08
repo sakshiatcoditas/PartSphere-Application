@@ -1,6 +1,8 @@
 package com.example.partsphere.presentation.owner.repository
 
+import android.net.Uri
 import com.example.partsphere.network.DistributorApi
+import com.example.partsphere.presentation.owner.model.AddCOResponse
 import com.example.partsphere.presentation.owner.model.CreateFactoryRequest
 import com.example.partsphere.presentation.owner.model.CreateFactoryResponse
 import com.example.partsphere.presentation.owner.model.EmployeeCount
@@ -8,7 +10,14 @@ import com.example.partsphere.presentation.owner.model.FactoryLocation
 import com.example.partsphere.presentation.owner.model.FactoryResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.HttpException
+import java.io.File
 import javax.inject.Inject
 
 class OwnerRepository @Inject constructor(
@@ -91,6 +100,27 @@ class OwnerRepository @Inject constructor(
             } catch (e: Exception) {
                 Result.failure(e)
             }
+        }
+    }
+
+    suspend fun addCentralOfficer(name: String, email: String, photoUri: Uri?): Result<AddCOResponse> {
+        return try {
+            val namePart = RequestBody.create("text/plain".toMediaTypeOrNull(), name)
+            val emailPart = RequestBody.create("text/plain".toMediaTypeOrNull(), email)
+            val photoPart = photoUri?.let {
+                val file = File(it.path!!)
+                val requestFile = RequestBody.create("image/*".toMediaTypeOrNull(), file)
+                MultipartBody.Part.createFormData("photo", file.name, requestFile)
+            }
+
+            val response = api.addCentralOfficer(namePart, emailPart, photoPart)
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                Result.failure(Exception(response.errorBody()?.string() ?: "Unknown error"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 

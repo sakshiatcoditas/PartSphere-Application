@@ -1,6 +1,7 @@
 package com.example.partsphere.presentation.owner.ui
 
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
@@ -34,7 +35,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
+import com.example.partsphere.presentation.owner.viewmodel.ManageFactoryViewModel
 
 // --- Data model ---
 data class CentralOfficer(
@@ -46,11 +50,17 @@ data class CentralOfficer(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CentralOfficerScreen(
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    viewModel: ManageFactoryViewModel= hiltViewModel()
 ) {
+    val context = LocalContext.current
+    val uiState by viewModel.uiState.collectAsState()
+
     var showDialog by remember { mutableStateOf(false) }
-    var officers by remember { mutableStateOf(listOf<CentralOfficer>()) }
     var officerToEdit by remember { mutableStateOf<CentralOfficer?>(null) }
+
+    // Convert API data to UI model
+    val officers = uiState.officers.map { CentralOfficer(it.username, it.email, null) }
 
     Scaffold(
         topBar = {
@@ -58,7 +68,7 @@ fun CentralOfficerScreen(
                 title = { Text("Central Officers", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -94,28 +104,24 @@ fun CentralOfficerScreen(
                             }
                         } else {
                             items(officers) { officer ->
-
-                                // Inside CentralOfficerScreen -> LazyColumn items
                                 CentralOfficerCard(
                                     officer = officer,
                                     onEdit = { updatedOfficer ->
-                                        officers = officers.map {
-                                            if (it == officer) updatedOfficer else it
-                                        }
-                                        showDialog = false
+                                        // Currently only local update
+                                        officerToEdit = updatedOfficer
+                                        showDialog = true
                                     },
-                                    onDelete = { selected ->
-                                        officers = officers.filter { it != selected }
-                                    }
+                                    onDelete = { /* TODO: API delete */ }
                                 )
                             }
                         }
                     }
                 }
 
+                // Floating Add Button
                 FloatingActionButton(
                     onClick = {
-                        officerToEdit = null // Adding new
+                        officerToEdit = null
                         showDialog = true
                     },
                     modifier = Modifier
@@ -126,33 +132,39 @@ fun CentralOfficerScreen(
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Add Officer", tint = Color.White)
                 }
+
+                // Loading indicator
+                if (uiState.isLoading) {
+                    Box(
+                        Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
             }
 
+            // Error Toast
+            uiState.error?.let { error ->
+                LaunchedEffect(error) {
+                    Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            // Add/Edit Dialog
             if (showDialog) {
                 AddCentralOfficerDialog(
                     onDismiss = { showDialog = false },
                     onAdd = { name, email, photoUri ->
-                        if (officerToEdit != null) {
-                            // Edit existing
-                            officers = officers.map {
-                                if (it == officerToEdit) CentralOfficer(name, email, photoUri)
-                                else it
-                            }
-                        } else {
-                            // Add new
-                            officers = officers + CentralOfficer(name, email, photoUri)
-                        }
+                        viewModel.addCentralOfficer(name, email, photoUri)
                         showDialog = false
                     },
-                    initialData = officerToEdit // Pass existing data for editing
+                    initialData = officerToEdit
                 )
             }
         }
     )
 }
-
-
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -214,7 +226,6 @@ fun CentralOfficerCard(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Edit & Delete Buttons
             Row(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.fillMaxWidth()
@@ -238,7 +249,6 @@ fun CentralOfficerCard(
         }
     }
 
-    // ---------------- Delete Confirmation Dialog ----------------
     if (showDeleteDialog) {
         val context = LocalContext.current
         AlertDialog(
@@ -251,19 +261,14 @@ fun CentralOfficerCard(
                         onDelete(officer)
                         showDeleteDialog = false
                     }
-                ) {
-                    Text("Delete", color = Color.Red)
-                }
+                ) { Text("Delete", color = Color.Red) }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Cancel", color = Color.Gray)
-                }
+                TextButton(onClick = { showDeleteDialog = false }) { Text("Cancel", color = Color.Gray) }
             }
         )
     }
 
-    // ---------------- Edit Dialog ----------------
     if (showEditDialog) {
         AddCentralOfficerDialog(
             onDismiss = { showEditDialog = false },
@@ -275,9 +280,6 @@ fun CentralOfficerCard(
         )
     }
 }
-
-
-
 
 @Composable
 fun AddCentralOfficerDialog(
@@ -306,7 +308,6 @@ fun AddCentralOfficerDialog(
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
 
-                // Photo picker
                 Box(
                     modifier = Modifier
                         .size(100.dp)
@@ -354,7 +355,11 @@ fun AddCentralOfficerDialog(
                     TextButton(onClick = onDismiss) { Text("Cancel", color = Color.Gray) }
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(
-                        onClick = { if (name.text.isNotBlank() && email.text.isNotBlank()) onAdd(name.text, email.text, photoUri) },
+                        onClick = {
+                            if (name.text.isNotBlank() && email.text.isNotBlank()) {
+                                onAdd(name.text, email.text, photoUri)
+                            }
+                        },
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
                     ) { Text("Save", color = Color.White) }
                 }

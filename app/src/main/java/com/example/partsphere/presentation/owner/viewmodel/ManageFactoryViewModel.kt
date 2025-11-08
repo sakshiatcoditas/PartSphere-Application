@@ -1,7 +1,10 @@
 package com.example.partsphere.presentation.owner.viewmodel
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.partsphere.presentation.owner.model.AddCOResponse
+import com.example.partsphere.presentation.owner.model.CentralOfficerUiState
 import com.example.partsphere.presentation.owner.model.FactoryItem
 import com.example.partsphere.presentation.owner.repository.OwnerRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,8 +28,6 @@ class ManageFactoryViewModel @Inject constructor(
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
-    private var currentPage = 0
-    private var isLastPage = false
 
     init {
         fetchFactories()
@@ -110,6 +111,26 @@ class ManageFactoryViewModel @Inject constructor(
                 }
             } finally {
                 _isLoading.value = false
+            }
+        }
+    }
+
+    //Add CO Officer
+
+    private val _uiState = MutableStateFlow(CentralOfficerUiState())
+    val uiState: StateFlow<CentralOfficerUiState> = _uiState
+
+    fun addCentralOfficer(name: String, email: String, photoUri: Uri?) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            val result = repository.addCentralOfficer(name, email, photoUri)
+            result.onSuccess { co ->
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    officers = _uiState.value.officers + co
+                )
+            }.onFailure { e ->
+                _uiState.value = _uiState.value.copy(isLoading = false, error = e.message)
             }
         }
     }
