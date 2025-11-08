@@ -3,6 +3,8 @@ package com.example.partsphere.network
 import com.example.partsphere.model.DistributorRegistrationResponse
 import com.example.partsphere.presentation.login_screen.model.LoginRequest
 import com.example.partsphere.presentation.login_screen.model.LoginResponse
+import com.example.partsphere.presentation.owner.model.CreateFactoryRequest
+import com.example.partsphere.presentation.owner.model.CreateFactoryResponse
 import com.example.partsphere.presentation.owner.model.EmployeeCountResponse
 import com.example.partsphere.presentation.owner.model.FactoryLocationResponse
 import com.example.partsphere.presentation.owner.model.FactoryResponse
@@ -12,8 +14,10 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Multipart
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Part
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface DistributorApi {
@@ -52,4 +56,21 @@ interface DistributorApi {
         @Query("page") page: Int = 0,
         @Query("size") size: Int = 5
     ): Response<FactoryResponse>
+
+
+    //Update Factory
+    @PATCH("/api/factory/update/{id}")
+    suspend fun updateFactory(
+        @Path("id") id: Int,
+        @Body body: Map<String, String>
+    ): Response<Unit>
+    // We assume the API returns empty body on success
+
+    @POST("/api/factory/newfactory")
+    suspend fun createFactory(
+        @Body request: CreateFactoryRequest
+    ): Response<CreateFactoryResponse>
+
+
+
 }

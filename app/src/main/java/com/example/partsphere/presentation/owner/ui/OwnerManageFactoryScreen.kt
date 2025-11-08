@@ -5,6 +5,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import android.widget.Toast
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -23,44 +24,62 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.partsphere.presentation.owner.model.FactoryItem
+import com.example.partsphere.presentation.owner.viewmodel.ManageFactoryViewModel
 
 // ---------------- MAIN SCREEN ----------------
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ManageFactoryScreen() {
+fun ManageFactoryScreen(viewModel: ManageFactoryViewModel = hiltViewModel()) {
     var searchText by remember { mutableStateOf("") }
     var showFilterDialog by remember { mutableStateOf(false) }
     var showAddDialog by remember { mutableStateOf(false) }
 
+    // --- Collect state from ViewModel ---
+    val isLoading by viewModel.isLoading.collectAsState()
+    val error by viewModel.errorMessage.collectAsState()
 
+    // Mutable list for UI updates (update/delete)
 
-    val factories = remember {
-        mutableStateListOf(
-            FactoryData("ABC Factory", "Mumbai", "John Doe"),
-            FactoryData("XYZ Plant", "Pune", "Jane Smith"),
-            FactoryData("LMN Factory", "Delhi", "Rahul Kumar")
+    val factoriesState by viewModel.factories.collectAsState()
+
+    //  Step 2: Map them into your UI model (FactoryItem)
+    val factories = factoriesState.map { apiItem ->
+        FactoryItem(
+            id = apiItem.id,
+            name = apiItem.name,
+            location = apiItem.location,
+            plantheadName = apiItem.plantheadName ?: "—"
         )
     }
 
-    // Dummy locations (until API integration)
-    val dummyLocations = listOf(
+    // Step 3: Fetch data once when screen opens
+    LaunchedEffect(Unit) {
+        viewModel.fetchFactories()
+    }
+
+    // Locations for filtering dropdown (from API + some default)
+    val allLocations = (factories.map { it.location } + listOf(
         "Mumbai", "Pune", "Delhi", "Chennai", "Bangalore",
         "Kolkata", "Hyderabad", "Ahmedabad", "Jaipur", "Lucknow"
-    )
+    )).distinct()
 
-    val allLocations = (dummyLocations + factories.map { it.location }).distinct()
     var selectedLocations by remember { mutableStateOf(setOf<String>()) }
 
+    // Filter factories based on search text & selected locations
     val filteredFactories = factories.filter {
         val matchText = it.name.contains(searchText, ignoreCase = true) ||
                 it.location.contains(searchText, ignoreCase = true) ||
-                it.plantHead.contains(searchText, ignoreCase = true)
+                (it.plantheadName ?: "").contains(searchText, ignoreCase = true)
         val matchLocation = selectedLocations.isEmpty() || it.location in selectedLocations
         matchText && matchLocation
     }
+
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -71,15 +90,13 @@ fun ManageFactoryScreen() {
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
-            //  Search + Filter Row
+            // --- Search + Filter Row ---
             Row(verticalAlignment = Alignment.CenterVertically) {
                 OutlinedTextField(
                     value = searchText,
                     onValueChange = { searchText = it },
                     placeholder = { Text("Search factories") },
-                    leadingIcon = {
-                        Icon(Icons.Default.Search, contentDescription = null, tint = Color.Gray)
-                    },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = Color.Gray) },
                     modifier = Modifier
                         .weight(1f)
                         .padding(end = 8.dp),
@@ -93,7 +110,7 @@ fun ManageFactoryScreen() {
                     )
                 )
 
-                //  Filter Button
+                // Filter Button
                 IconButton(
                     onClick = { showFilterDialog = true },
                     modifier = Modifier
@@ -108,7 +125,7 @@ fun ManageFactoryScreen() {
                     colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Transparent)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Home, // Replace with FilterList icon if preferred
+                        imageVector = Icons.Default.Home,
                         contentDescription = "Filter",
                         tint = if (selectedLocations.isNotEmpty()) Color.Black else Color(0xFF333333),
                         modifier = Modifier.size(24.dp)
@@ -118,44 +135,54 @@ fun ManageFactoryScreen() {
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            //  Factory List
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                contentPadding = PaddingValues(bottom = 80.dp)
-            ) {
-                if (filteredFactories.isEmpty()) {
-                    item {
-                        Box(
-                            modifier = Modifier
-                                .fillParentMaxSize()
-                                .padding(16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("No results found", fontSize = 16.sp, color = Color.Gray)
+            // --- Loading / Error / Factory List ---
+            when {
+                isLoading -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                }
+                error != null -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("Error: $error", color = Color.Red)
+                    }
+                }
+                else -> {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        contentPadding = PaddingValues(bottom = 80.dp)
+                    ) {
+                        if (filteredFactories.isEmpty()) {
+                            item {
+                                Box(
+                                    modifier = Modifier
+                                        .fillParentMaxSize()
+                                        .padding(16.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text("No results found", fontSize = 16.sp, color = Color.Gray)
+                                }
+                            }
+                        } else {
+                            items(filteredFactories) { factory ->
+                                FactoryCard(
+                                    factory = factory,
+                                    allLocations = allLocations,
+
+                                    onDelete = {
+                                        viewModel.fetchFactories() // refresh the data after delete
+                                               },
+                                    viewModel = viewModel // pass it here
+                                )
+                            }
                         }
                     }
-                } else {
-
-                    items(filteredFactories) { factory ->
-                        FactoryCard(
-                            factory = factory,
-                            allLocations = allLocations,
-                            onUpdate = { updated ->
-                                val index = factories.indexOf(factory)
-                                if (index != -1) factories[index] = updated
-                            },
-                            onDelete = { toDelete ->
-                                factories.remove(toDelete) //   factory from list
-                            }
-                        )
-                    }
-
                 }
             }
         }
 
-        // ➕ Floating Add Button
+        // --- Floating Add Button ---
         FloatingActionButton(
             onClick = { showAddDialog = true },
             modifier = Modifier
@@ -347,23 +374,31 @@ fun ManageFactoryScreen() {
 
                         Spacer(modifier = Modifier.width(8.dp))
 
+                        val context = LocalContext.current
+
                         Button(
                             onClick = {
                                 if (name.isNotBlank() && query.isNotBlank()) {
-                                    factories.add(
-                                        FactoryData(
-                                            name = name,
-                                            location = query,
-                                            plantHead = "—"
-                                        )
-                                    )
-                                    showAddDialog = false
+                                    viewModel.createFactory(name, query) { success, message ->
+                                        if (success) {
+                                            showAddDialog = false
+                                            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                                            viewModel.fetchFactories() // optional refresh if you added this method
+                                        } else {
+                                            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                } else {
+                                    Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
                                 }
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
+                            modifier = Modifier.fillMaxWidth()
                         ) {
                             Text("Create Factory", color = Color.White)
                         }
+
+
                     }
                 }
             },
@@ -378,10 +413,10 @@ fun ManageFactoryScreen() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FactoryCard(
-    factory: FactoryData,
+    factory: FactoryItem,
     allLocations: List<String>,
-    onUpdate: (FactoryData) -> Unit,
-    onDelete: (FactoryData) -> Unit
+    onDelete: (FactoryItem) -> Unit,
+    viewModel: ManageFactoryViewModel
 ) {
     var isPressed by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
@@ -389,8 +424,12 @@ fun FactoryCard(
     val scale by animateFloatAsState(if (isPressed) 0.85f else 1f, tween(100))
     val overlayColor by animateColorAsState(if (isPressed) Color(0x33000000) else Color.Transparent, tween(150))
 
+// ---------------- Factory Card UI ----------------
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .graphicsLayer { scaleX = scale; scaleY = scale }
+            .background(overlayColor),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
@@ -402,52 +441,42 @@ fun FactoryCard(
                 Column {
                     Text(factory.name, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     Text("Location: ${factory.location}", fontSize = 14.sp, color = Color.DarkGray)
-                    Text("Plant Head: ${factory.plantHead}", fontSize = 14.sp, color = Color.DarkGray)
+                    Text("Plant Head: ${factory.plantheadName ?: "—"}", fontSize = 14.sp, color = Color.DarkGray)
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // ---------------- Edit & Delete Buttons ----------------
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
-                Button(
-                    onClick = { showEditDialog = true },
-                    modifier = Modifier
-                        .weight(1f)
-                        .graphicsLayer(scaleX = scale, scaleY = scale)
-                        .pointerInput(Unit) {
-                            detectTapGestures(
-                                onPress = {
-                                    isPressed = true
-                                    tryAwaitRelease()
-                                    isPressed = false
-                                }
-                            )
-                        }
-                        .background(overlayColor, RoundedCornerShape(12.dp)),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
-                ) { Text("Update", color = Color.White) }
-
                 OutlinedButton(
-                    onClick = {  onDelete(factory)  },
+                    onClick = { showEditDialog = true }, // Opens the edit dialog
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Black)
-                ) { Text("Delete") }
+                ) {
+                    Text("Edit")
+                }
+
+                OutlinedButton(
+                    onClick = { onDelete(factory) },
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Black)
+                ) {
+                    Text("Delete")
+                }
             }
         }
     }
 
-    // --- Editable Dialog ---
-    // --- Editable Dialog ---
+// ---------------- Edit Dialog ----------------
     if (showEditDialog) {
         var name by remember { mutableStateOf(factory.name) }
         var locationExpanded by remember { mutableStateOf(false) }
         var locationQuery by remember { mutableStateOf(factory.location) }
 
         var plantHeadExpanded by remember { mutableStateOf(false) }
-        var plantHeadQuery by remember { mutableStateOf(factory.plantHead) }
+        var plantHeadQuery by remember { mutableStateOf(factory.plantheadName ?: "") }
 
-        // Dummy data (later replace with API data)
-        val allLocations = listOf("Mumbai", "Pune", "Delhi", "Bangalore", "Chennai", "Hyderabad")
         val allPlantHeads = listOf("Ravi Kumar", "Anjali Mehta", "Vikram Singh", "Sanya Patel", "Amit Shah")
 
         AlertDialog(
@@ -455,14 +484,9 @@ fun FactoryCard(
             confirmButton = {},
             text = {
                 Column {
-                    Text(
-                        text = "Edit Factory",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
+                    Text("Edit Factory", fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 8.dp))
 
-                    // Factory Name field
+                    // Factory Name
                     OutlinedTextField(
                         value = name,
                         onValueChange = { name = it },
@@ -472,7 +496,7 @@ fun FactoryCard(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // --- Searchable Location Dropdown ---
+                    // Location Dropdown
                     ExposedDropdownMenuBox(
                         expanded = locationExpanded,
                         onExpandedChange = { locationExpanded = !locationExpanded }
@@ -485,9 +509,7 @@ fun FactoryCard(
                             },
                             label = { Text("Location") },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(locationExpanded) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true),
+                            modifier = Modifier.fillMaxWidth(),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = Color.Black,
                                 unfocusedBorderColor = Color.Gray
@@ -500,29 +522,21 @@ fun FactoryCard(
                             expanded = locationExpanded,
                             onDismissRequest = { locationExpanded = false }
                         ) {
-                            if (filteredLocations.isEmpty()) {
+                            filteredLocations.forEach { loc ->
                                 DropdownMenuItem(
-                                    text = { Text("No match found") },
-                                    onClick = {},
-                                    enabled = false
+                                    text = { Text(loc) },
+                                    onClick = {
+                                        locationQuery = loc
+                                        locationExpanded = false
+                                    }
                                 )
-                            } else {
-                                filteredLocations.forEach { loc ->
-                                    DropdownMenuItem(
-                                        text = { Text(loc) },
-                                        onClick = {
-                                            locationQuery = loc
-                                            locationExpanded = false
-                                        }
-                                    )
-                                }
                             }
                         }
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // --- Searchable Plant Head Dropdown ---
+                    // Plant Head Dropdown
                     ExposedDropdownMenuBox(
                         expanded = plantHeadExpanded,
                         onExpandedChange = { plantHeadExpanded = !plantHeadExpanded }
@@ -535,9 +549,7 @@ fun FactoryCard(
                             },
                             label = { Text("Plant Head Name") },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(plantHeadExpanded) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true),
+                            modifier = Modifier.fillMaxWidth(),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = Color.Black,
                                 unfocusedBorderColor = Color.Gray
@@ -550,44 +562,29 @@ fun FactoryCard(
                             expanded = plantHeadExpanded,
                             onDismissRequest = { plantHeadExpanded = false }
                         ) {
-                            if (filteredPlantHeads.isEmpty()) {
+                            filteredPlantHeads.forEach { head ->
                                 DropdownMenuItem(
-                                    text = { Text("No match found") },
-                                    onClick = {},
-                                    enabled = false
+                                    text = { Text(head) },
+                                    onClick = {
+                                        plantHeadQuery = head
+                                        plantHeadExpanded = false
+                                    }
                                 )
-                            } else {
-                                filteredPlantHeads.forEach { head ->
-                                    DropdownMenuItem(
-                                        text = { Text(head) },
-                                        onClick = {
-                                            plantHeadQuery = head
-                                            plantHeadExpanded = false
-                                        }
-                                    )
-                                }
                             }
                         }
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Action buttons
+                    // Update + Cancel buttons
                     Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
-                        TextButton(onClick = { showEditDialog = false }) {
-                            Text("Cancel", color = Color.Gray)
-                        }
+                        TextButton(onClick = { showEditDialog = false }) { Text("Cancel", color = Color.Gray) }
                         Spacer(modifier = Modifier.width(8.dp))
                         Button(
                             onClick = {
-                                onUpdate(
-                                    factory.copy(
-                                        name = name,
-                                        location = locationQuery,
-                                        plantHead = plantHeadQuery
-                                    )
-                                )
-                                showEditDialog = false
+                                viewModel.updateFactory(factory.id, name) { success ->
+                                    if (success) showEditDialog = false
+                                }
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
                         ) {
@@ -601,11 +598,7 @@ fun FactoryCard(
         )
     }
 
+
 }
 
-// ---------------- DATA CLASS ----------------
-data class FactoryData(
-    val name: String,
-    val location: String,
-    val plantHead: String
-)
+

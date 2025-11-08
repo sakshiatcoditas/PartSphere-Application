@@ -1,14 +1,13 @@
 package com.example.partsphere.presentation.owner.viewmodel
 
-
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.partsphere.presentation.owner.model.FactoryItem
 import com.example.partsphere.presentation.owner.repository.OwnerRepository
-
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -26,11 +25,14 @@ class ManageFactoryViewModel @Inject constructor(
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
+    private var currentPage = 0
+    private var isLastPage = false
+
     init {
         fetchFactories()
     }
 
-    fun fetchFactories(page: Int = 0, size: Int = 5) {
+    fun fetchFactories(page: Int = 0, size: Int = 20) {
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
@@ -44,4 +46,56 @@ class ManageFactoryViewModel @Inject constructor(
             }
         }
     }
+
+    fun updateFactory(factoryId: Int, newName: String, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = null
+            try {
+                val success = repository.updateFactory(factoryId, newName)
+                if (success) {
+                    // Update local list immediately
+                    _factories.value = _factories.value.map {
+                        if (it.id == factoryId) it.copy(name = newName) else it
+                    }
+                }
+                onResult(success)
+            } catch (e: Exception) {
+                _errorMessage.value = e.localizedMessage ?: "Unknown error"
+                onResult(false)
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    private val _isCreating = MutableStateFlow(false)
+    val isCreating = _isCreating.asStateFlow()
+
+    private val _createMessage = MutableStateFlow<String?>(null)
+    val createMessage = _createMessage.asStateFlow()
+
+    fun createFactory(
+        name: String,
+        location: String,
+        onResult: (Boolean, String) -> Unit
+    ) {
+        viewModelScope.launch {
+            _isCreating.value = true
+            val result = repository.createFactory(name, location)
+            result.onSuccess { response ->
+                _createMessage.value = response.message
+                fetchFactories() // optional: refresh factory list
+                onResult(true, response.message)
+            }.onFailure { e ->
+                val errorMsg = e.message ?: "Failed to create factory"
+                _createMessage.value = errorMsg
+                onResult(false, errorMsg)
+            }
+            _isCreating.value = false
+        }
+    }
+
+
+
 }
