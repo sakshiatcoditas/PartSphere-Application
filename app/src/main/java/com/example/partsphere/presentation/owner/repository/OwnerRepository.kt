@@ -77,6 +77,24 @@ class OwnerRepository @Inject constructor(
         }
     }
 
+    suspend fun deleteFactory(factoryId: Int): Result<String> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = api.deleteFactory(factoryId)
+                if (response.isSuccessful) {
+                    val message = response.body()?.message ?: "Factory deleted successfully!"
+                    Result.success(message)
+                } else {
+                    val errorMsg = response.errorBody()?.string() ?: "Failed to delete factory"
+                    Result.failure(Exception(errorMsg))
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
+
+
 
 
 

@@ -32,7 +32,7 @@ class ManageFactoryViewModel @Inject constructor(
         fetchFactories()
     }
 
-    fun fetchFactories(page: Int = 0, size: Int = 20) {
+    fun fetchFactories(page: Int = 0, size: Int = 100) {
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
@@ -95,6 +95,25 @@ class ManageFactoryViewModel @Inject constructor(
             _isCreating.value = false
         }
     }
+
+    fun deleteFactory(factoryId: Int, onResult: (Boolean, String) -> Unit) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                val result = repository.deleteFactory(factoryId)
+                result.onSuccess { message ->
+                    //  Remove deleted factory from list immediately
+                    _factories.value = _factories.value.filterNot { it.id == factoryId }
+                    onResult(true, message)
+                }.onFailure { e ->
+                    onResult(false, e.message ?: "Failed to delete factory")
+                }
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
 
 
 

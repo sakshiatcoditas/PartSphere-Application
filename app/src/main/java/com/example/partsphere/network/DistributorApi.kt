@@ -5,6 +5,7 @@ import com.example.partsphere.presentation.login_screen.model.LoginRequest
 import com.example.partsphere.presentation.login_screen.model.LoginResponse
 import com.example.partsphere.presentation.owner.model.CreateFactoryRequest
 import com.example.partsphere.presentation.owner.model.CreateFactoryResponse
+import com.example.partsphere.presentation.owner.model.DeleteFactoryResponse
 import com.example.partsphere.presentation.owner.model.EmployeeCountResponse
 import com.example.partsphere.presentation.owner.model.FactoryLocationResponse
 import com.example.partsphere.presentation.owner.model.FactoryResponse
@@ -12,6 +13,7 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Multipart
 import retrofit2.http.PATCH
@@ -64,13 +66,20 @@ interface DistributorApi {
         @Path("id") id: Int,
         @Body body: Map<String, String>
     ): Response<Unit>
-    // We assume the API returns empty body on success
 
+
+    //Create New Factory
     @POST("/api/factory/newfactory")
     suspend fun createFactory(
         @Body request: CreateFactoryRequest
     ): Response<CreateFactoryResponse>
 
+
+    //Delete A factory
+    @DELETE("api/factory/{id}")
+    suspend fun deleteFactory(
+        @Path("id") factoryId: Int
+    ): Response<DeleteFactoryResponse>
 
 
 }

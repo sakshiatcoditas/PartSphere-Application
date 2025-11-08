@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.partsphere.presentation.owner.model.FactoryItem
+import com.example.partsphere.presentation.owner.ui.components.SearchBar
 import com.example.partsphere.presentation.owner.viewmodel.ManageFactoryViewModel
 
 // ---------------- MAIN SCREEN ----------------
@@ -92,22 +93,12 @@ fun ManageFactoryScreen(viewModel: ManageFactoryViewModel = hiltViewModel()) {
 
             // --- Search + Filter Row ---
             Row(verticalAlignment = Alignment.CenterVertically) {
-                OutlinedTextField(
-                    value = searchText,
-                    onValueChange = { searchText = it },
-                    placeholder = { Text("Search factories") },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = Color.Gray) },
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(end = 8.dp),
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedBorderColor = Color.Gray,
-                        focusedBorderColor = Color.Black,
-                        unfocusedContainerColor = Color(0xFFF8F8F8),
-                        focusedContainerColor = Color(0xFFF8F8F8)
-                    )
+
+                SearchBar(
+                    query = searchText,
+                    onQueryChange = { searchText = it },
+                    placeholderText = "Search factories",
+                    modifier = Modifier.weight(1f).padding(end = 8.dp)
                 )
 
                 // Filter Button
@@ -169,10 +160,6 @@ fun ManageFactoryScreen(viewModel: ManageFactoryViewModel = hiltViewModel()) {
                                 FactoryCard(
                                     factory = factory,
                                     allLocations = allLocations,
-
-                                    onDelete = {
-                                        viewModel.fetchFactories() // refresh the data after delete
-                                               },
                                     viewModel = viewModel // pass it here
                                 )
                             }
@@ -415,16 +402,16 @@ fun ManageFactoryScreen(viewModel: ManageFactoryViewModel = hiltViewModel()) {
 fun FactoryCard(
     factory: FactoryItem,
     allLocations: List<String>,
-    onDelete: (FactoryItem) -> Unit,
     viewModel: ManageFactoryViewModel
 ) {
     var isPressed by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     val scale by animateFloatAsState(if (isPressed) 0.85f else 1f, tween(100))
     val overlayColor by animateColorAsState(if (isPressed) Color(0x33000000) else Color.Transparent, tween(150))
 
-// ---------------- Factory Card UI ----------------
+    // ---------------- Factory Card ----------------
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -436,7 +423,12 @@ fun FactoryCard(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Home, contentDescription = null, modifier = Modifier.size(40.dp), tint = Color.Black)
+                Icon(
+                    Icons.Default.Home,
+                    contentDescription = null,
+                    modifier = Modifier.size(40.dp),
+                    tint = Color.Black
+                )
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text(factory.name, fontWeight = FontWeight.Bold, fontSize = 18.sp)
@@ -448,9 +440,12 @@ fun FactoryCard(
             Spacer(modifier = Modifier.height(16.dp))
 
             // ---------------- Edit & Delete Buttons ----------------
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 OutlinedButton(
-                    onClick = { showEditDialog = true }, // Opens the edit dialog
+                    onClick = { showEditDialog = true },
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Black)
                 ) {
@@ -458,7 +453,7 @@ fun FactoryCard(
                 }
 
                 OutlinedButton(
-                    onClick = { onDelete(factory) },
+                    onClick = { showDeleteDialog = true },
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Black)
                 ) {
@@ -468,7 +463,39 @@ fun FactoryCard(
         }
     }
 
-// ---------------- Edit Dialog ----------------
+    // ---------------- Delete Confirmation Dialog ----------------
+    if (showDeleteDialog) {
+        val context = LocalContext.current
+
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Delete Factory") },
+            text = { Text("Are you sure you want to delete this factory? This action cannot be undone.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.deleteFactory(factory.id) { success, message ->
+                            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                            if (success) {
+                                // Optional: trigger a refresh or notify parent
+                                viewModel.fetchFactories()
+                            }
+                            showDeleteDialog = false
+                        }
+                    }
+                ) {
+                    Text("Delete", color = Color.Red)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancel", color = Color.Gray)
+                }
+            }
+        )
+    }
+
+    // ---------------- Edit Dialog ----------------
     if (showEditDialog) {
         var name by remember { mutableStateOf(factory.name) }
         var locationExpanded by remember { mutableStateOf(false) }
@@ -484,7 +511,12 @@ fun FactoryCard(
             confirmButton = {},
             text = {
                 Column {
-                    Text("Edit Factory", fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 8.dp))
+                    Text(
+                        "Edit Factory",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
 
                     // Factory Name
                     OutlinedTextField(
@@ -516,7 +548,9 @@ fun FactoryCard(
                             )
                         )
 
-                        val filteredLocations = allLocations.filter { it.contains(locationQuery, ignoreCase = true) }
+                        val filteredLocations = allLocations.filter {
+                            it.contains(locationQuery, ignoreCase = true)
+                        }
 
                         ExposedDropdownMenu(
                             expanded = locationExpanded,
@@ -556,7 +590,9 @@ fun FactoryCard(
                             )
                         )
 
-                        val filteredPlantHeads = allPlantHeads.filter { it.contains(plantHeadQuery, ignoreCase = true) }
+                        val filteredPlantHeads = allPlantHeads.filter {
+                            it.contains(plantHeadQuery, ignoreCase = true)
+                        }
 
                         ExposedDropdownMenu(
                             expanded = plantHeadExpanded,
@@ -577,8 +613,13 @@ fun FactoryCard(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     // Update + Cancel buttons
-                    Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
-                        TextButton(onClick = { showEditDialog = false }) { Text("Cancel", color = Color.Gray) }
+                    Row(
+                        horizontalArrangement = Arrangement.End,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        TextButton(onClick = { showEditDialog = false }) {
+                            Text("Cancel", color = Color.Gray)
+                        }
                         Spacer(modifier = Modifier.width(8.dp))
                         Button(
                             onClick = {
@@ -597,8 +638,6 @@ fun FactoryCard(
             containerColor = Color.White
         )
     }
-
-
 }
 
 
