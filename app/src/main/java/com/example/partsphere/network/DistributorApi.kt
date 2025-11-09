@@ -4,12 +4,14 @@ import com.example.partsphere.model.DistributorRegistrationResponse
 import com.example.partsphere.presentation.login_screen.model.LoginRequest
 import com.example.partsphere.presentation.login_screen.model.LoginResponse
 import com.example.partsphere.presentation.owner.model.AddCOResponse
+import com.example.partsphere.presentation.owner.model.CentralOfficerResponse
 import com.example.partsphere.presentation.owner.model.CreateFactoryRequest
 import com.example.partsphere.presentation.owner.model.CreateFactoryResponse
 import com.example.partsphere.presentation.owner.model.DeleteFactoryResponse
 import com.example.partsphere.presentation.owner.model.EmployeeCountResponse
 import com.example.partsphere.presentation.owner.model.FactoryLocationResponse
 import com.example.partsphere.presentation.owner.model.FactoryResponse
+import com.example.partsphere.presentation.owner.ui.CentralOfficer
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.Response
@@ -89,6 +91,12 @@ interface DistributorApi {
         @Part("email") email: RequestBody,
         @Part photo: MultipartBody.Part?
     ): Response<AddCOResponse>
+
+
+
+
+    @GET("api/users/role/central-officer")
+    suspend fun getCentralOfficers(): List<AddCOResponse>
 
 
 }

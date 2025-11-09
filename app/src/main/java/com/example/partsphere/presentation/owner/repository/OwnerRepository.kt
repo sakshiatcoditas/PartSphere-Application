@@ -1,5 +1,6 @@
 package com.example.partsphere.presentation.owner.repository
 
+import android.content.Context
 import android.net.Uri
 import com.example.partsphere.network.DistributorApi
 import com.example.partsphere.presentation.owner.model.AddCOResponse
@@ -8,6 +9,8 @@ import com.example.partsphere.presentation.owner.model.CreateFactoryResponse
 import com.example.partsphere.presentation.owner.model.EmployeeCount
 import com.example.partsphere.presentation.owner.model.FactoryLocation
 import com.example.partsphere.presentation.owner.model.FactoryResponse
+import com.example.partsphere.presentation.owner.ui.CentralOfficer
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
@@ -17,11 +20,13 @@ import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.HttpException
+import retrofit2.Response
 import java.io.File
 import javax.inject.Inject
 
 class OwnerRepository @Inject constructor(
-    private val api: DistributorApi
+    private val api: DistributorApi,
+    @ApplicationContext private val context: Context
 ) {
     suspend fun getEmployeeCounts(): List<EmployeeCount> {
         val response = api.getEmployeeCounts()
@@ -103,17 +108,29 @@ class OwnerRepository @Inject constructor(
         }
     }
 
-    suspend fun addCentralOfficer(name: String, email: String, photoUri: Uri?): Result<AddCOResponse> {
+    suspend fun addCentralOfficer(
+        name: String,
+        email: String,
+        photoUri: Uri?
+    ): Result<AddCOResponse> {
         return try {
-            val namePart = RequestBody.create("text/plain".toMediaTypeOrNull(), name)
-            val emailPart = RequestBody.create("text/plain".toMediaTypeOrNull(), email)
-            val photoPart = photoUri?.let {
-                val file = File(it.path!!)
-                val requestFile = RequestBody.create("image/*".toMediaTypeOrNull(), file)
-                MultipartBody.Part.createFormData("photo", file.name, requestFile)
+            // Convert name & email to RequestBody
+            val namePart = name.toRequestBody("text/plain".toMediaTypeOrNull())
+            val emailPart = email.toRequestBody("text/plain".toMediaTypeOrNull())
+
+            // Convert Uri to MultipartBody.Part
+            val photoPart: MultipartBody.Part? = photoUri?.let { uri ->
+                val inputStream = context.contentResolver.openInputStream(uri)
+                val tempFile = File(context.cacheDir, "temp_photo_${System.currentTimeMillis()}.jpg")
+                inputStream?.use { input -> tempFile.outputStream().use { output -> input.copyTo(output) } }
+
+                val requestFile = tempFile.asRequestBody("image/*".toMediaTypeOrNull())
+                MultipartBody.Part.createFormData("photo", tempFile.name, requestFile)
             }
 
-            val response = api.addCentralOfficer(namePart, emailPart, photoPart)
+            // Call API
+            val response: Response<AddCOResponse> = api.addCentralOfficer(namePart, emailPart, photoPart)
+
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!)
             } else {
@@ -123,6 +140,8 @@ class OwnerRepository @Inject constructor(
             Result.failure(e)
         }
     }
+
+    // Get all central officers
 
 
 

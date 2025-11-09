@@ -1,6 +1,6 @@
 package com.example.partsphere.presentation.owner.model
 
-data class AddCOResponse(
+data class CentralOfficerResponse(
     val id: Int,
     val username: String,
     val email: String,

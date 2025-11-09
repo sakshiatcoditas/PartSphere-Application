@@ -7,6 +7,7 @@ import com.example.partsphere.presentation.owner.model.AddCOResponse
 import com.example.partsphere.presentation.owner.model.CentralOfficerUiState
 import com.example.partsphere.presentation.owner.model.FactoryItem
 import com.example.partsphere.presentation.owner.repository.OwnerRepository
+import com.example.partsphere.presentation.owner.ui.CentralOfficer
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -124,16 +125,27 @@ class ManageFactoryViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             val result = repository.addCentralOfficer(name, email, photoUri)
-            result.onSuccess { co ->
+
+            result.onSuccess { coResponse ->
+                val co = CentralOfficer(
+                    name = coResponse.username, // or coResponse.name
+                    email = coResponse.email,
+                    photoUri = null // or map from response if you have a URL/URI
+                )
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     officers = _uiState.value.officers + co
                 )
-            }.onFailure { e ->
+            }
+                .onFailure { e ->
                 _uiState.value = _uiState.value.copy(isLoading = false, error = e.message)
             }
         }
     }
+
+
+
+
 
 
 

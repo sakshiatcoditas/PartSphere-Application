@@ -51,7 +51,7 @@ data class CentralOfficer(
 @Composable
 fun CentralOfficerScreen(
     onBackClick: () -> Unit,
-    viewModel: ManageFactoryViewModel= hiltViewModel()
+    viewModel: ManageFactoryViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
@@ -60,7 +60,7 @@ fun CentralOfficerScreen(
     var officerToEdit by remember { mutableStateOf<CentralOfficer?>(null) }
 
     // Convert API data to UI model
-    val officers = uiState.officers.map { CentralOfficer(it.username, it.email, null) }
+    val officers = uiState.officers.map { CentralOfficer(it.name, it.email, null) }
 
     Scaffold(
         topBar = {
