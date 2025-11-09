@@ -7,6 +7,7 @@ import com.example.partsphere.presentation.owner.model.AddCOResponse
 import com.example.partsphere.presentation.owner.model.CreateFactoryRequest
 import com.example.partsphere.presentation.owner.model.CreateFactoryResponse
 import com.example.partsphere.presentation.owner.model.DeleteFactoryResponse
+import com.example.partsphere.presentation.owner.model.DeleteResponse
 import com.example.partsphere.presentation.owner.model.EmployeeCountResponse
 import com.example.partsphere.presentation.owner.model.FactoryLocationResponse
 import com.example.partsphere.presentation.owner.model.FactoryResponse
@@ -96,6 +97,12 @@ interface DistributorApi {
 
     @GET("/api/users/role/central-officer")
     suspend fun getAllCentralOfficers(): Response<List<AddCOResponse>>
+
+
+    @DELETE("api/users/delete/{id}")
+    suspend fun deleteCentralOfficer(@Path("id") id: Int): Response<DeleteResponse>
+
+
 
 
 }

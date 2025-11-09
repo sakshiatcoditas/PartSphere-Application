@@ -38,10 +38,12 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
+import com.example.partsphere.presentation.owner.ui.components.SearchBar
 import com.example.partsphere.presentation.owner.viewmodel.ManageFactoryViewModel
 
 // --- Data model ---
 data class CentralOfficer(
+    val id:Int,
     val name: String,
     val email: String,
    val photoUrl: String? = null,   // for fetched image (Cloudinary URL)
@@ -60,9 +62,18 @@ fun CentralOfficerScreen(
     var showDialog by remember { mutableStateOf(false) }
     var officerToEdit by remember { mutableStateOf<CentralOfficer?>(null) }
 
-    // 🔹 Fetch officers when the screen opens
+    //  Fetch officers when the screen opens
     LaunchedEffect(Unit) {
         viewModel.fetchCentralOfficers()
+    }
+
+    //  Search state
+    var searchQuery by remember { mutableStateOf("") }
+
+    //  Filter officers by search query
+    val filteredOfficers = uiState.officers.filter {
+        it.name.contains(searchQuery, ignoreCase = true) ||
+                it.email.contains(searchQuery, ignoreCase = true)
     }
 
     Scaffold(
@@ -81,81 +92,96 @@ fun CentralOfficerScreen(
                 )
             )
         },
-        containerColor = Color.White
-    ) { paddingValues ->
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-                // 🔹 Show list of officers from backend
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    contentPadding = PaddingValues(bottom = 80.dp)
-                ) {
-                    if (uiState.officers.isEmpty() && !uiState.isLoading) {
-                        item {
-                            Box(
-                                modifier = Modifier
-                                    .fillParentMaxSize()
-                                    .padding(16.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text("No Central Officers found", color = Color.Gray)
-                            }
-                        }
-                    } else {
-                        items(uiState.officers) { officer ->
-                            CentralOfficerCard(
-                                officer = officer,
-                                onEdit = { updatedOfficer ->
-                                    officerToEdit = updatedOfficer
-                                    showDialog = true
-                                },
-                                onDelete = { /* TODO: implement delete if needed */ }
-                            )
-                        }
-                    }
-                }
-            }
-
-            // Floating Action Button
+        containerColor = Color.White,
+        floatingActionButton = {
             FloatingActionButton(
                 onClick = {
                     officerToEdit = null
                     showDialog = true
                 },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(20.dp),
                 containerColor = Color.Black,
                 shape = CircleShape
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Officer", tint = Color.White)
             }
+        }
+    ) { innerPadding ->
 
-            // Loading Indicator
-            if (uiState.isLoading) {
-                Box(
-                    Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
+        //  Use the Scaffold’s padding directly
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .background(Color.White)
+        ) {
+            // 🔍 Search Bar (fixed top)
+            SearchBar(
+                query = searchQuery,
+                onQueryChange = { searchQuery = it },
+                placeholderText = "Search Central Officers",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+
+            //  Scrollable full-height list
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize(), //  key change — replaces weight(1f)
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                contentPadding = PaddingValues(
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = 8.dp,
+                    bottom = 100.dp //  ensures list can scroll behind FAB & bottom nav
+                )
+            ) {
+                if (filteredOfficers.isEmpty()) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillParentMaxSize()
+                                .padding(top = 100.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("No Central Officers found", fontSize = 16.sp, color = Color.Gray)
+                        }
+                    }
+                } else {
+                    items(filteredOfficers) { officer ->
+
+                        CentralOfficerCard(
+                            officer = officer,
+                            onEdit = { updatedOfficer ->
+                                officerToEdit = updatedOfficer
+                                showDialog = true
+                            },
+                            onDelete = { officerToDelete ->
+                                viewModel.deleteCentralOfficer(officerToDelete.id)
+                            }
+                        )
+
+                    }
                 }
             }
         }
 
-        // Error Toast
+
+        // Optional loading overlay
+        if (uiState.isLoading) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        }
+
+        // Error toast
         uiState.error?.let { error ->
             LaunchedEffect(error) {
                 Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
             }
         }
 
-        // Add/Edit Dialog
+        // Dialog
         if (showDialog) {
             AddCentralOfficerDialog(
                 onDismiss = { showDialog = false },
@@ -167,7 +193,19 @@ fun CentralOfficerScreen(
             )
         }
     }
+
+    // Optional loading overlay
+    if (uiState.isLoading) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+    }
+
+
+
+
 }
+
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -288,6 +326,7 @@ fun CentralOfficerCard(
             onAdd = { name, email, photoUri ->
                 onEdit(
                     CentralOfficer(
+                         id=0,
                         name = name,
                         email = email,
                         localPhotoUri = photoUri //  matches data class type

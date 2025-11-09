@@ -128,9 +128,10 @@ class ManageFactoryViewModel @Inject constructor(
 
             result.onSuccess { coResponse ->
                 val co = CentralOfficer(
+                    id = coResponse.id,
                     name = coResponse.username,
                     email = coResponse.email,
-                    photoUrl = coResponse.photo // ✅ Cloudinary URL from backend
+                    photoUrl = coResponse.photo // Cloudinary URL from backend
                 )
 
                 _uiState.value = _uiState.value.copy(
@@ -157,6 +158,7 @@ class ManageFactoryViewModel @Inject constructor(
                 }
                 val officers = coList.map { response ->
                     CentralOfficer(
+                        id = response.id,
                         name = response.username,
                         email = response.email,
                         photoUrl = response.photo?.replace("http://", "https://")
@@ -168,4 +170,33 @@ class ManageFactoryViewModel @Inject constructor(
             }
         }
     }
+
+
+    private val _wasDeleted = MutableStateFlow(false)
+    val wasDeleted: StateFlow<Boolean> = _wasDeleted
+
+
+
+    fun deleteCentralOfficer(officerId: Int) {
+        viewModelScope.launch {
+            val currentList = _uiState.value.officers
+            val updatedList = currentList.filterNot { it.id == officerId }
+            _uiState.value = _uiState.value.copy(officers = updatedList)
+
+            val result = repository.deleteCentralOfficer(officerId)
+
+            result.onSuccess {
+                _wasDeleted.value = true  // set flag
+                fetchCentralOfficers()
+            }.onFailure { e ->
+                _uiState.value = _uiState.value.copy(error = e.message)
+            }
+        }
+    }
+
+
+
 }
+
+
+

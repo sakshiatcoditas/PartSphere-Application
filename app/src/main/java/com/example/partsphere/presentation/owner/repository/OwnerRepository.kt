@@ -155,6 +155,27 @@ class OwnerRepository @Inject constructor(
             Result.failure(e)
         }
     }
+
+
+    suspend fun deleteCentralOfficer(id: Int): Result<String> {
+        return try {
+            val response = api.deleteCentralOfficer(id)
+            if (response.isSuccessful) {
+                Result.success("Officer deleted successfully")
+            } else {
+                Result.failure(Exception("Failed to delete officer"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+
 }
+
+
+
+
+
 
 
