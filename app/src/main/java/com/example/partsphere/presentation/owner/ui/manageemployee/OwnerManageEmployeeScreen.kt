@@ -1,17 +1,10 @@
-package com.example.partsphere.presentation.owner.ui
-
-import android.net.Uri
-import androidx.compose.material3.OutlinedTextField
+package com.example.partsphere.presentation.owner.ui.manageemployee
 
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.TextFieldDefaults
 
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,16 +13,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.foundation.Image
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import coil.compose.rememberAsyncImagePainter
 
 @Composable
 fun ManageEmployeeScreen(
     onCentralOfficerClick: () -> Unit,
-    onPlantHeadClick: () -> Unit
+    onPlantHeadClick: () -> Unit,
+    onChiefSupervisorClick: () -> Unit // New callback for Chief Supervisor
 ) {
     Column(
         modifier = Modifier
@@ -54,11 +43,19 @@ fun ManageEmployeeScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         EmployeeCard(
-            title = "Add New Plant Head / Chief Supervisor",
+            title = "Add New Plant Head",
             onClick = onPlantHeadClick
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        EmployeeCard(
+            title = "Add New Chief Supervisor",
+            onClick = onChiefSupervisorClick
         )
     }
 }
+
 
 @Composable
 fun EmployeeCard(title: String, onClick: () -> Unit) {

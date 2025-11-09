@@ -3,11 +3,10 @@ package com.example.partsphere.presentation.owner.viewmodel
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.partsphere.presentation.owner.model.AddCOResponse
 import com.example.partsphere.presentation.owner.model.CentralOfficerUiState
 import com.example.partsphere.presentation.owner.model.FactoryItem
 import com.example.partsphere.presentation.owner.repository.OwnerRepository
-import com.example.partsphere.presentation.owner.ui.CentralOfficer
+import com.example.partsphere.presentation.owner.ui.manageemployee.CentralOfficer
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
