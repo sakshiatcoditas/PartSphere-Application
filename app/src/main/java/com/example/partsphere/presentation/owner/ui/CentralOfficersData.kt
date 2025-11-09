@@ -59,8 +59,10 @@ fun CentralOfficerScreen(
     var showDialog by remember { mutableStateOf(false) }
     var officerToEdit by remember { mutableStateOf<CentralOfficer?>(null) }
 
-    // Convert API data to UI model
-    val officers = uiState.officers.map { CentralOfficer(it.name, it.email, null) }
+    // 🔹 Fetch officers when the screen opens
+    LaunchedEffect(Unit) {
+        viewModel.fetchCentralOfficers()
+    }
 
     Scaffold(
         topBar = {
@@ -78,93 +80,94 @@ fun CentralOfficerScreen(
                 )
             )
         },
-        containerColor = Color.White,
-        content = { paddingValues ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-            ) {
-                Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                        contentPadding = PaddingValues(bottom = 80.dp)
-                    ) {
-                        if (officers.isEmpty()) {
-                            item {
-                                Box(
-                                    modifier = Modifier
-                                        .fillParentMaxSize()
-                                        .padding(16.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text("No Central Officers found", color = Color.Gray)
-                                }
+        containerColor = Color.White
+    ) { paddingValues ->
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+                // 🔹 Show list of officers from backend
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(bottom = 80.dp)
+                ) {
+                    if (uiState.officers.isEmpty() && !uiState.isLoading) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillParentMaxSize()
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("No Central Officers found", color = Color.Gray)
                             }
-                        } else {
-                            items(officers) { officer ->
-                                CentralOfficerCard(
-                                    officer = officer,
-                                    onEdit = { updatedOfficer ->
-                                        // Currently only local update
-                                        officerToEdit = updatedOfficer
-                                        showDialog = true
-                                    },
-                                    onDelete = { /* TODO: API delete */ }
-                                )
-                            }
+                        }
+                    } else {
+                        items(uiState.officers) { officer ->
+                            CentralOfficerCard(
+                                officer = officer,
+                                onEdit = { updatedOfficer ->
+                                    officerToEdit = updatedOfficer
+                                    showDialog = true
+                                },
+                                onDelete = { /* TODO: implement delete if needed */ }
+                            )
                         }
                     }
                 }
+            }
 
-                // Floating Add Button
-                FloatingActionButton(
-                    onClick = {
-                        officerToEdit = null
-                        showDialog = true
-                    },
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(20.dp),
-                    containerColor = Color.Black,
-                    shape = CircleShape
+            // Floating Action Button
+            FloatingActionButton(
+                onClick = {
+                    officerToEdit = null
+                    showDialog = true
+                },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(20.dp),
+                containerColor = Color.Black,
+                shape = CircleShape
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Add Officer", tint = Color.White)
+            }
+
+            // Loading Indicator
+            if (uiState.isLoading) {
+                Box(
+                    Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Add Officer", tint = Color.White)
+                    CircularProgressIndicator()
                 }
-
-                // Loading indicator
-                if (uiState.isLoading) {
-                    Box(
-                        Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                }
-            }
-
-            // Error Toast
-            uiState.error?.let { error ->
-                LaunchedEffect(error) {
-                    Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
-                }
-            }
-
-            // Add/Edit Dialog
-            if (showDialog) {
-                AddCentralOfficerDialog(
-                    onDismiss = { showDialog = false },
-                    onAdd = { name, email, photoUri ->
-                        viewModel.addCentralOfficer(name, email, photoUri)
-                        showDialog = false
-                    },
-                    initialData = officerToEdit
-                )
             }
         }
-    )
+
+        // Error Toast
+        uiState.error?.let { error ->
+            LaunchedEffect(error) {
+                Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // Add/Edit Dialog
+        if (showDialog) {
+            AddCentralOfficerDialog(
+                onDismiss = { showDialog = false },
+                onAdd = { name, email, photoUri ->
+                    viewModel.addCentralOfficer(name, email, photoUri)
+                    showDialog = false
+                },
+                initialData = officerToEdit
+            )
+        }
+    }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

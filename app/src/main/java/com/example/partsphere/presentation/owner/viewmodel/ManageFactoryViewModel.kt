@@ -128,26 +128,48 @@ class ManageFactoryViewModel @Inject constructor(
 
             result.onSuccess { coResponse ->
                 val co = CentralOfficer(
-                    name = coResponse.username, // or coResponse.name
+                    name = coResponse.username,
                     email = coResponse.email,
-                    photoUri = null // or map from response if you have a URL/URI
+                    photoUri = coResponse.photo?.let { Uri.parse(it) }
                 )
+                // Update list with new officer
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     officers = _uiState.value.officers + co
                 )
-            }
-                .onFailure { e ->
+                //  Immediately refresh entire list from backend
+                fetchCentralOfficers()
+            }.onFailure { e ->
                 _uiState.value = _uiState.value.copy(isLoading = false, error = e.message)
             }
         }
     }
 
+    fun fetchCentralOfficers() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            val result = repository.getAllCentralOfficers()
 
-
-
-
-
-
-
+            result.onSuccess { coList ->
+                val officers = coList.map { response ->
+                    CentralOfficer(
+                        name = response.username,
+                        email = response.email,
+                        photoUri = response.photo?.let { Uri.parse(it) }
+                    )
+                }
+                _uiState.value = _uiState.value.copy(isLoading = false, officers = officers)
+            }.onFailure { e ->
+                _uiState.value = _uiState.value.copy(isLoading = false, error = e.message)
+            }
+        }
+    }
 }
+
+
+
+
+
+
+
+

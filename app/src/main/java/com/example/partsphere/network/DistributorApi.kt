@@ -4,7 +4,6 @@ import com.example.partsphere.model.DistributorRegistrationResponse
 import com.example.partsphere.presentation.login_screen.model.LoginRequest
 import com.example.partsphere.presentation.login_screen.model.LoginResponse
 import com.example.partsphere.presentation.owner.model.AddCOResponse
-import com.example.partsphere.presentation.owner.model.CentralOfficerResponse
 import com.example.partsphere.presentation.owner.model.CreateFactoryRequest
 import com.example.partsphere.presentation.owner.model.CreateFactoryResponse
 import com.example.partsphere.presentation.owner.model.DeleteFactoryResponse
@@ -95,8 +94,8 @@ interface DistributorApi {
 
 
 
-    @GET("api/users/role/central-officer")
-    suspend fun getCentralOfficers(): List<AddCOResponse>
+    @GET("/api/users/role/central-officer")
+    suspend fun getAllCentralOfficers(): Response<List<AddCOResponse>>
 
 
 }

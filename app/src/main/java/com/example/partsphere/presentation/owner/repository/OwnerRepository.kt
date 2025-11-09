@@ -112,13 +112,11 @@ class OwnerRepository @Inject constructor(
         name: String,
         email: String,
         photoUri: Uri?
-    ): Result<AddCOResponse> {
-        return try {
-            // Convert name & email to RequestBody
+    ): Result<AddCOResponse> = withContext(Dispatchers.IO) {
+        try {
             val namePart = name.toRequestBody("text/plain".toMediaTypeOrNull())
             val emailPart = email.toRequestBody("text/plain".toMediaTypeOrNull())
 
-            // Convert Uri to MultipartBody.Part
             val photoPart: MultipartBody.Part? = photoUri?.let { uri ->
                 val inputStream = context.contentResolver.openInputStream(uri)
                 val tempFile = File(context.cacheDir, "temp_photo_${System.currentTimeMillis()}.jpg")
@@ -128,8 +126,8 @@ class OwnerRepository @Inject constructor(
                 MultipartBody.Part.createFormData("photo", tempFile.name, requestFile)
             }
 
-            // Call API
-            val response: Response<AddCOResponse> = api.addCentralOfficer(namePart, emailPart, photoPart)
+            val response: Response<AddCOResponse> =
+                api.addCentralOfficer(namePart, emailPart, photoPart)
 
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!)
@@ -145,6 +143,18 @@ class OwnerRepository @Inject constructor(
 
 
 
-
-
+    suspend fun getAllCentralOfficers(): Result<List<AddCOResponse>> = withContext(Dispatchers.IO) {
+        try {
+            val response = api.getAllCentralOfficers()
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                Result.failure(Exception(response.errorBody()?.string() ?: "Unknown error"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }
+
+
