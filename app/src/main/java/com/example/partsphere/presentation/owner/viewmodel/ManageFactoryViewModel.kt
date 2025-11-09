@@ -130,14 +130,15 @@ class ManageFactoryViewModel @Inject constructor(
                 val co = CentralOfficer(
                     name = coResponse.username,
                     email = coResponse.email,
-                    photoUri = coResponse.photo?.let { Uri.parse(it) }
+                    photoUrl = coResponse.photo // ✅ Cloudinary URL from backend
                 )
-                // Update list with new officer
+
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     officers = _uiState.value.officers + co
                 )
-                //  Immediately refresh entire list from backend
+
+                // Refresh the list
                 fetchCentralOfficers()
             }.onFailure { e ->
                 _uiState.value = _uiState.value.copy(isLoading = false, error = e.message)
@@ -151,11 +152,14 @@ class ManageFactoryViewModel @Inject constructor(
             val result = repository.getAllCentralOfficers()
 
             result.onSuccess { coList ->
+                coList.forEach {
+                    println(" Officer photo URL: ${it.photo}")
+                }
                 val officers = coList.map { response ->
                     CentralOfficer(
                         name = response.username,
                         email = response.email,
-                        photoUri = response.photo?.let { Uri.parse(it) }
+                        photoUrl = response.photo?.replace("http://", "https://")
                     )
                 }
                 _uiState.value = _uiState.value.copy(isLoading = false, officers = officers)
@@ -165,11 +169,3 @@ class ManageFactoryViewModel @Inject constructor(
         }
     }
 }
-
-
-
-
-
-
-
-

@@ -44,7 +44,8 @@ import com.example.partsphere.presentation.owner.viewmodel.ManageFactoryViewMode
 data class CentralOfficer(
     val name: String,
     val email: String,
-    val photoUri: Uri? = null
+   val photoUrl: String? = null,   // for fetched image (Cloudinary URL)
+    val localPhotoUri: Uri? = null  // for temporary local image before upload
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -203,21 +204,30 @@ fun CentralOfficerCard(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
+
                 Box(
                     modifier = Modifier
                         .size(60.dp)
                         .background(Color.LightGray, shape = CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    officer.photoUri?.let {
+                    val painter = rememberAsyncImagePainter(
+                        officer.localPhotoUri ?: officer.photoUrl
+                    )
+
+                    if (officer.localPhotoUri != null || officer.photoUrl != null) {
                         Image(
-                            painter = rememberAsyncImagePainter(it),
+                            painter = painter,
                             contentDescription = officer.name,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize()
                         )
-                    } ?: Text("No Photo", color = Color.DarkGray, fontSize = 12.sp)
+                    } else {
+                        Text("No Photo", color = Color.DarkGray, fontSize = 12.sp)
+                    }
                 }
+
+
 
                 Spacer(modifier = Modifier.width(12.dp))
 
@@ -276,12 +286,19 @@ fun CentralOfficerCard(
         AddCentralOfficerDialog(
             onDismiss = { showEditDialog = false },
             onAdd = { name, email, photoUri ->
-                onEdit(CentralOfficer(name, email, photoUri))
+                onEdit(
+                    CentralOfficer(
+                        name = name,
+                        email = email,
+                        localPhotoUri = photoUri //  matches data class type
+                    )
+                )
                 showEditDialog = false
             },
             initialData = officer
         )
     }
+
 }
 
 @Composable
@@ -292,7 +309,7 @@ fun AddCentralOfficerDialog(
 ) {
     var name by remember { mutableStateOf(TextFieldValue(initialData?.name ?: "")) }
     var email by remember { mutableStateOf(TextFieldValue(initialData?.email ?: "")) }
-    var photoUri by remember { mutableStateOf<Uri?>(initialData?.photoUri) }
+    var photoUri by remember { mutableStateOf<Uri?>(initialData?.localPhotoUri) }
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
