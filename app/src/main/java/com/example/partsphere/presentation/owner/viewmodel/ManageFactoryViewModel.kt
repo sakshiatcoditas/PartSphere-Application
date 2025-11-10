@@ -11,6 +11,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -192,6 +193,35 @@ class ManageFactoryViewModel @Inject constructor(
             }
         }
     }
+
+    fun updateCentralOfficer(
+        officerId: Int,
+        username: String,
+        email: String,
+        photoUri: Uri?,   // changed from String? to Uri?
+        onResult: (Boolean) -> Unit
+    ) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+
+            val result = repository.updateCentralOfficer(officerId, username, email, photoUri)
+
+            if (result.isSuccess) {
+                fetchCentralOfficers() // refresh list after update
+                onResult(true)
+            } else {
+                _uiState.update { it.copy(error = result.exceptionOrNull()?.message) }
+                onResult(false)
+            }
+
+            _uiState.update { it.copy(isLoading = false) }
+        }
+    }
+
+
+
+
+
 
 
 

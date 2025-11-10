@@ -9,6 +9,7 @@ import com.example.partsphere.presentation.owner.model.CreateFactoryResponse
 import com.example.partsphere.presentation.owner.model.EmployeeCount
 import com.example.partsphere.presentation.owner.model.FactoryLocation
 import com.example.partsphere.presentation.owner.model.FactoryResponse
+import com.example.partsphere.presentation.owner.model.UpdateCentralOfficerRequest
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -166,6 +167,42 @@ class OwnerRepository @Inject constructor(
             Result.failure(e)
         }
     }
+
+    suspend fun updateCentralOfficer(
+        officerId: Int,
+        username: String,
+        email: String,
+        photoUri: Uri? // nullable
+    ): Result<AddCOResponse> {
+        return try {
+            val idPart = officerId.toString().toRequestBody()
+            val usernamePart = username.toRequestBody()
+            val emailPart = email.toRequestBody()
+
+            val photoPart = photoUri?.let { uri ->
+                val file = File(uri.path!!)
+                MultipartBody.Part.createFormData(
+                    "photo",
+                    file.name,
+                    file.asRequestBody("image/*".toMediaTypeOrNull())
+                )
+            }
+
+            val response = api.updateCentralOfficer(idPart, usernamePart, emailPart, photoPart)
+
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                Result.failure(Exception(response.errorBody()?.string() ?: "Failed to update officer"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+
+
+
 
 
 }

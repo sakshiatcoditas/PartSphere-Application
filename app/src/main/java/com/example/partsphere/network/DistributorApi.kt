@@ -11,6 +11,7 @@ import com.example.partsphere.presentation.owner.model.DeleteResponse
 import com.example.partsphere.presentation.owner.model.EmployeeCountResponse
 import com.example.partsphere.presentation.owner.model.FactoryLocationResponse
 import com.example.partsphere.presentation.owner.model.FactoryResponse
+import com.example.partsphere.presentation.owner.model.UpdateCentralOfficerRequest
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.Response
@@ -20,6 +21,7 @@ import retrofit2.http.GET
 import retrofit2.http.Multipart
 import retrofit2.http.PATCH
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -100,6 +102,16 @@ interface DistributorApi {
 
     @DELETE("api/users/delete/{id}")
     suspend fun deleteCentralOfficer(@Path("id") id: Int): Response<DeleteResponse>
+
+
+    @Multipart
+    @PATCH("/api/users/update-emp")
+    suspend fun updateCentralOfficer(
+        @Part("id") id: RequestBody,
+        @Part("username") username: RequestBody,
+        @Part("email") email: RequestBody,
+        @Part photo: MultipartBody.Part? // optional
+    ): Response<AddCOResponse>
 
 
 

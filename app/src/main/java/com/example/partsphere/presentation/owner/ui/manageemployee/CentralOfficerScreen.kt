@@ -33,6 +33,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import com.example.partsphere.presentation.owner.ui.components.SearchBar
 import com.example.partsphere.presentation.owner.viewmodel.ManageFactoryViewModel
@@ -144,25 +145,19 @@ fun CentralOfficerScreen(
                     }
                 } else {
                     items(filteredOfficers) { officer ->
-
                         CentralOfficerCard(
                             officer = officer,
-                            onEdit = { updatedOfficer ->
-                                officerToEdit = updatedOfficer
-                                showDialog = true
-                            },
-                            onDelete = { officerToDelete ->
-                                viewModel.deleteCentralOfficer(officerToDelete.id)
-                            }
+                            onDelete = { officerToDelete -> viewModel.deleteCentralOfficer(officerToDelete.id) },
+                            viewModel = viewModel
                         )
-
                     }
+
                 }
             }
         }
 
 
-        // Optional loading overlay
+        //  loading overlay
         if (uiState.isLoading) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
@@ -189,7 +184,7 @@ fun CentralOfficerScreen(
         }
     }
 
-    // Optional loading overlay
+   // loading overlay
     if (uiState.isLoading) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
@@ -207,8 +202,9 @@ fun CentralOfficerScreen(
 @Composable
 fun CentralOfficerCard(
     officer: CentralOfficer,
-    onEdit: (CentralOfficer) -> Unit,
-    onDelete: (CentralOfficer) -> Unit
+
+    onDelete: (CentralOfficer) -> Unit,
+    viewModel: ManageFactoryViewModel
 ) {
     var isPressed by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
@@ -319,19 +315,25 @@ fun CentralOfficerCard(
         AddCentralOfficerDialog(
             onDismiss = { showEditDialog = false },
             onAdd = { name, email, photoUri ->
-                onEdit(
-                    CentralOfficer(
-                         id=0,
-                        name = name,
-                        email = email,
-                        localPhotoUri = photoUri //  matches data class type
-                    )
-                )
-                showEditDialog = false
+                val officerId = officer.id
+                val photoToSend = photoUri?.toString() ?: officer.photoUrl  // use existing photo if unchanged
+                viewModel.updateCentralOfficer(
+                    officer.id,
+                    name,
+                    email,
+                    photoUri
+                ) { success ->
+                    if (success) showEditDialog = false
+                }
+
+
             },
             initialData = officer
         )
     }
+
+
+
 
 }
 
