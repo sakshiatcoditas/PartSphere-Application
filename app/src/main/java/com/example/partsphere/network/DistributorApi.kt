@@ -11,6 +11,7 @@ import com.example.partsphere.presentation.owner.model.DeleteResponse
 import com.example.partsphere.presentation.owner.model.EmployeeCountResponse
 import com.example.partsphere.presentation.owner.model.FactoryLocationResponse
 import com.example.partsphere.presentation.owner.model.FactoryResponse
+import com.example.partsphere.presentation.owner.model.UnassignedPlantHead
 import com.example.partsphere.presentation.owner.model.UpdateCentralOfficerRequest
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -112,6 +113,11 @@ interface DistributorApi {
         @Part("email") email: RequestBody,
         @Part photo: MultipartBody.Part? // optional
     ): Response<AddCOResponse>
+
+
+
+    @GET("api/users/unassigned-planthead")
+    suspend fun getUnassignedPlantHeads(): Response<List<UnassignedPlantHead>>
 
 
 

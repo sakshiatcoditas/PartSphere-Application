@@ -219,4 +219,3 @@ class OwnerRepository @Inject constructor(
 
 
 
-

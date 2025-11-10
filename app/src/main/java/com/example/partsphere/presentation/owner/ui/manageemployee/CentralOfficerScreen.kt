@@ -43,7 +43,7 @@ data class CentralOfficer(
     val id:Int,
     val name: String,
     val email: String,
-   val photoUrl: String? = null,   // for fetched image (Cloudinary URL)
+    val photoUrl: String? = null,   // for fetched image (Cloudinary URL)
     val localPhotoUri: Uri? = null  // for temporary local image before upload
 )
 
@@ -185,7 +185,7 @@ fun CentralOfficerScreen(
 
     }
 
-   // loading overlay
+    // loading overlay
     if (uiState.isLoading) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
@@ -313,26 +313,33 @@ fun CentralOfficerCard(
     }
 
     if (showEditDialog) {
-        val context = LocalContext.current  // get context here
+        val context = LocalContext.current
 
         AddCentralOfficerDialog(
             onDismiss = { showEditDialog = false },
-            onAdd = { name, email, photoUri, _ ->  // ignore existingPhotoUrl
+            onAdd = { name, email, photoUri, _ ->
                 val officerId = officer.id
 
                 viewModel.updateCentralOfficer(
-                    context = context,  // pass context first
+                    context = context,
                     officerId = officerId,
                     username = name,
                     email = email,
-                    photoUri = photoUri // null = keep existing, Uri = upload new
+                    photoUri = photoUri
                 ) { success ->
-                    if (success) showEditDialog = false
+                    if (success) {
+                        Toast.makeText(context, "Edited successfully ", Toast.LENGTH_SHORT).show()
+                        showEditDialog = false
+                    } else {
+                        Toast.makeText(context, "Edit failed. Please try again.", Toast.LENGTH_SHORT).show()
+                    }
                 }
             },
             initialData = officer
         )
     }
+
+
 
 
 
@@ -439,4 +446,3 @@ fun AddCentralOfficerDialog(
         containerColor = Color.White
     )
 }
-
