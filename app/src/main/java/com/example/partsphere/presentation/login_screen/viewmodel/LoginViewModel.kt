@@ -18,6 +18,7 @@ class LoginViewModel @Inject constructor(
     private val repository: LoginRepository,
     private val prefs: PreferenceManager
 ) : ViewModel() {
+    fun getPrefs(): PreferenceManager = prefs
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState: StateFlow<AuthState> = _authState
@@ -31,11 +32,14 @@ class LoginViewModel @Inject constructor(
                     val body = response.body()
 
                     if (body != null && body.token != null) {
-                        prefs.saveToken(body.token) // Save token
+                        prefs.saveToken(body.token)
+                        prefs.saveRole(body.role ?: "")
                         _authState.value = AuthState.Success(
                             body.message ?: "Login successful",
-                            role = body.role )
+                            role = body.role
+                        )
                     }
+
 
                     else {
                         _authState.value = AuthState.Error(body?.error ?: "Unknown error")

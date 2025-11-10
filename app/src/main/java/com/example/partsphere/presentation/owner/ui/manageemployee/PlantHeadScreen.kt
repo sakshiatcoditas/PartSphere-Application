@@ -1,5 +1,5 @@
 package com.example.partsphere.presentation.owner.ui.manageemployee
-import androidx.compose.ui.text.input.TextFieldValue
+
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -20,11 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -32,10 +28,13 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.example.partsphere.presentation.owner.ui.components.SearchBar
+import com.example.partsphere.presentation.owner.viewmodel.ManageFactoryViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 
 // ---------------- DATA CLASS ----------------
 data class PlantHead(
@@ -50,23 +49,45 @@ data class PlantHead(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlantHeadScreen(
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
+    viewModel: ManageFactoryViewModel = hiltViewModel()
 ) {
     var searchText by remember { mutableStateOf("") }
     var showDialog by remember { mutableStateOf(false) }
     var currentEditingHead by remember { mutableStateOf<PlantHead?>(null) }
 
-    // Sample list
-    var plantHeads by remember {
-        mutableStateOf(
-            mutableListOf(
-                PlantHead("Ravi Kumar", "ravi@example.com", "Manager", "Mumbai Plant"),
-                PlantHead("Anjali Mehta", "anjali@example.com", "Supervisor", "Pune Plant")
-            )
+    // --- Directly use mutableStateOf from ViewModel ---
+    val plantHeadsApi = viewModel.plantHeads
+    val loading = viewModel.loading
+    val error = viewModel.error
+
+    val plantHeads = remember { mutableStateOf(plantHeadsApi.map {
+        PlantHead(
+            name = it.username,
+            email = it.email,
+            designation = it.role,
+            factory = it.factory ?: "",
+            photoUri = null
         )
+    }.toMutableList()) }
+
+    // --- Fetch API once ---
+    LaunchedEffect(Unit) { viewModel.fetchPlantHeads() }
+
+    // --- Update local list when API returns ---
+    LaunchedEffect(plantHeadsApi) {
+        plantHeads.value = plantHeadsApi.map {
+            PlantHead(
+                name = it.username,
+                email = it.email,
+                designation = it.role,
+                factory = it.factory ?: "",
+                photoUri = null
+            )
+        }.toMutableList()
     }
 
-    val filteredHeads = plantHeads.filter { it.name.contains(searchText, ignoreCase = true) }
+    val filteredHeads = plantHeads.value.filter { it.name.contains(searchText, ignoreCase = true) }
 
     val allFactories = listOf("Mumbai Plant", "Pune Plant", "Delhi Plant")
 
@@ -100,42 +121,57 @@ fun PlantHeadScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxSize()
-            ) {
-                if (filteredHeads.isEmpty()) {
-                    item {
-                        Box(
-                            modifier = Modifier
-                                .fillParentMaxSize()
-                                .padding(16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("No results found", fontSize = 16.sp, color = Color.Gray)
+            if (loading) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = Color.Black)
+                }
+            } else if (error != null) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("Error: $error", color = Color.Red)
+                }
+            } else {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    if (filteredHeads.isEmpty()) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillParentMaxSize()
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("No results found", fontSize = 16.sp, color = Color.Gray)
+                            }
+                        }
+                    } else {
+                        items(filteredHeads) { head ->
+                            PlantHeadCard(
+                                plantHead = head,
+                                onEdit = {
+                                    currentEditingHead = head
+                                    showDialog = true
+                                },
+                                onDelete = {
+                                    plantHeads.value.remove(head)
+                                }
+                            )
                         }
                     }
-                } else {
-                    items(filteredHeads) { head ->
-                        PlantHeadCard(
-                            plantHead = head,
-                            onEdit = {
-                                currentEditingHead = head
-                                showDialog = true
-                            },
-                            onDelete = {
-                                plantHeads = plantHeads.toMutableList().also { it.remove(head) }
-                            }
-                        )
-                    }
-
                 }
             }
         }
 
         FloatingActionButton(
             onClick = {
-                currentEditingHead = null // Adding new head
+                currentEditingHead = null
                 showDialog = true
             },
             modifier = Modifier
@@ -156,13 +192,12 @@ fun PlantHeadScreen(
             onAdd = { name, email, designation, factory, photoUri ->
                 if (currentEditingHead != null) {
                     // Update existing
-                    plantHeads = plantHeads.map {
-                        if (it == currentEditingHead) PlantHead(name, email, designation, factory, photoUri)
-                        else it
-                    }.toMutableList()
+                    val index = plantHeads.value.indexOf(currentEditingHead)
+                    if (index >= 0) plantHeads.value[index] =
+                        PlantHead(name, email, designation, factory, photoUri)
                 } else {
                     // Add new
-                    plantHeads = (plantHeads + PlantHead(name, email, designation, factory, photoUri)).toMutableList()
+                    plantHeads.value.add(PlantHead(name, email, designation, factory, photoUri))
                 }
                 showDialog = false
             }
@@ -205,7 +240,7 @@ fun AddPlantHeadDialog(
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
 
-                // --- Photo ---
+                // Photo
                 Box(
                     modifier = Modifier
                         .size(100.dp)
@@ -228,27 +263,23 @@ fun AddPlantHeadDialog(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // --- Name ---
+                // Name & Email
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
                     label = { Text("Full Name") },
                     modifier = Modifier.fillMaxWidth()
                 )
-
                 Spacer(modifier = Modifier.height(8.dp))
-
-                // --- Email ---
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
                     label = { Text("Email") },
                     modifier = Modifier.fillMaxWidth()
                 )
-
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // --- Designation Dropdown ---
+                // Designation Dropdown
                 ExposedDropdownMenuBox(
                     expanded = designationExpanded,
                     onExpandedChange = { designationExpanded = !designationExpanded }
@@ -259,21 +290,15 @@ fun AddPlantHeadDialog(
                         label = { Text("Designation") },
                         readOnly = true,
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(designationExpanded) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .menuAnchor(),
+                        modifier = Modifier.fillMaxWidth().menuAnchor(),
                     )
                     ExposedDropdownMenu(
                         expanded = designationExpanded,
-                        onDismissRequest = { designationExpanded = false },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Color.White, RoundedCornerShape(12.dp))
-                            .border(1.dp, Color.LightGray, RoundedCornerShape(12.dp))
+                        onDismissRequest = { designationExpanded = false }
                     ) {
                         designations.forEach { option ->
                             DropdownMenuItem(
-                                text = { Text(option, color = Color.Black) },
+                                text = { Text(option) },
                                 onClick = {
                                     designation = option
                                     designationExpanded = false
@@ -285,32 +310,26 @@ fun AddPlantHeadDialog(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // --- Factory Dropdown ---
+                // Factory Dropdown
                 ExposedDropdownMenuBox(
                     expanded = factoryExpanded,
                     onExpandedChange = { factoryExpanded = !factoryExpanded }
                 ) {
                     OutlinedTextField(
                         value = selectedFactory,
-                        onValueChange = { selectedFactory = it },
+                        onValueChange = {},
                         label = { Text("Factory Associated") },
                         readOnly = true,
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(factoryExpanded) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .menuAnchor(),
+                        modifier = Modifier.fillMaxWidth().menuAnchor(),
                     )
                     ExposedDropdownMenu(
                         expanded = factoryExpanded,
-                        onDismissRequest = { factoryExpanded = false },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Color.White, RoundedCornerShape(12.dp))
-                            .border(1.dp, Color.LightGray, RoundedCornerShape(12.dp))
+                        onDismissRequest = { factoryExpanded = false }
                     ) {
                         allFactories.forEach { factory ->
                             DropdownMenuItem(
-                                text = { Text(factory, color = Color.Black) },
+                                text = { Text(factory) },
                                 onClick = {
                                     selectedFactory = factory
                                     factoryExpanded = false
@@ -322,12 +341,12 @@ fun AddPlantHeadDialog(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // --- Buttons ---
+                // Buttons
                 Row(
                     horizontalArrangement = Arrangement.End,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    TextButton(onClick = onDismiss) { Text("Cancel", color = Color.Gray) }
+                    TextButton(onClick = onDismiss) { Text("Cancel") }
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(
                         onClick = {
@@ -336,10 +355,9 @@ fun AddPlantHeadDialog(
                             ) {
                                 onAdd(name.text, email.text, designation, selectedFactory, photoUri)
                             }
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
+                        }
                     ) {
-                        Text(if (initialData != null) "Update" else "Add", color = Color.White)
+                        Text(if (initialData != null) "Update" else "Add")
                     }
                 }
             }
@@ -348,9 +366,6 @@ fun AddPlantHeadDialog(
         containerColor = Color.White
     )
 }
-
-
-
 
 // ---------------- PLANT HEAD CARD ----------------
 @OptIn(ExperimentalMaterial3Api::class)
@@ -381,12 +396,9 @@ fun PlantHeadCard(
                 )
             },
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row {
-                // --- Photo ---
                 Box(
                     modifier = Modifier
                         .size(60.dp)
@@ -407,7 +419,6 @@ fun PlantHeadCard(
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                // --- Details ---
                 Column(modifier = Modifier.weight(1f)) {
                     Text(plantHead.name, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     Text("Email: ${plantHead.email}", fontSize = 14.sp, color = Color.Gray)
@@ -418,7 +429,6 @@ fun PlantHeadCard(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // --- Edit/Delete Buttons like FactoryCard ---
             Row(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.fillMaxWidth()
@@ -426,23 +436,16 @@ fun PlantHeadCard(
                 OutlinedButton(
                     onClick = onEdit,
                     modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Black)
-                ) {
-                    Text("Edit")
-                }
+                ) { Text("Edit") }
 
                 OutlinedButton(
                     onClick = { showDeleteDialog = true },
                     modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Black)
-                ) {
-                    Text("Delete")
-                }
+                ) { Text("Delete") }
             }
         }
     }
 
-    // --- Delete Confirmation ---
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
@@ -452,10 +455,10 @@ fun PlantHeadCard(
                 TextButton(onClick = {
                     onDelete()
                     showDeleteDialog = false
-                }) { Text("Delete", color = Color.Red) }
+                }) { Text("Delete") }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) { Text("Cancel", color = Color.Gray) }
+                TextButton(onClick = { showDeleteDialog = false }) { Text("Cancel") }
             }
         )
     }

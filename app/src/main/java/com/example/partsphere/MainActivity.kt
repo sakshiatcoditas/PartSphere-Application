@@ -4,6 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.navigation.compose.rememberNavController
+import com.example.partsphere.presentation.login_screen.navigation.LoginNavGraph
 import com.example.partsphere.presentation.owner.ui.OwnerDashboardScreen
 
 import com.example.partsphere.ui.theme.PartSphereTheme
@@ -18,9 +20,9 @@ class MainActivity : ComponentActivity() {
             PartSphereTheme {
 
 
-//                val navController = rememberNavController()
+             //   val navController = rememberNavController()
                 //RegistrationNavGraph(navController = navController)
-//                LoginNavGraph(navController = navController)
+             //LoginNavGraph(navController = navController)
                 OwnerDashboardScreen()
             }
         }

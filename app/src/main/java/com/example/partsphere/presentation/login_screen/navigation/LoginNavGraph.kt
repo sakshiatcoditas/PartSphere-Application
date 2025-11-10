@@ -13,10 +13,21 @@ import com.example.partsphere.presentation.login_screen.viewmodel.LoginViewModel
 @Composable
 fun LoginNavGraph(navController: NavHostController) {
     val loginViewModel: LoginViewModel = hiltViewModel()
+    val prefs = loginViewModel.getPrefs() // we'll expose a getter for PreferenceManager
+
+    //  Determine start destination based on saved token + role
+    val startDestination = when {
+        prefs.getToken() != null && prefs.getRole()?.uppercase() == "OWNER" ->
+            LoginRoute.OwnerDashboard.route
+        prefs.getToken() != null && prefs.getRole()?.uppercase() == "DISTRIBUTOR" ->
+            LoginRoute.DistributorDashboard.route
+        else ->
+            LoginRoute.Login.route
+    }
 
     NavHost(
         navController = navController,
-        startDestination = LoginRoute.Login.route
+        startDestination = startDestination
     ) {
 
         // ------------------- Login Screen -------------------
@@ -28,9 +39,15 @@ fun LoginNavGraph(navController: NavHostController) {
                 onLoginSuccess = { role ->
                     // Navigate to role-specific screens
                     when (role.uppercase()) {
-                        "OWNER" -> navController.navigate(LoginRoute.OwnerDashboard.route)
-                        "DISTRIBUTOR" -> navController.navigate(LoginRoute.DistributorDashboard.route)
-                        else -> navController.navigate(LoginRoute.Home.route)
+                        "OWNER" -> navController.navigate(LoginRoute.OwnerDashboard.route) {
+                            popUpTo(LoginRoute.Login.route) { inclusive = true }
+                        }
+                        "DISTRIBUTOR" -> navController.navigate(LoginRoute.DistributorDashboard.route) {
+                            popUpTo(LoginRoute.Login.route) { inclusive = true }
+                        }
+                        else -> navController.navigate(LoginRoute.Home.route) {
+                            popUpTo(LoginRoute.Login.route) { inclusive = true }
+                        }
                     }
                 }
             )
@@ -41,7 +58,7 @@ fun LoginNavGraph(navController: NavHostController) {
             HomeScreen()
         }
 
-        // ------------------- Role-based Dashboards (placeholders) -------------------
+        // ------------------- Role-based Dashboards -------------------
         composable(LoginRoute.DistributorDashboard.route) {
             DistributorDashboardScreen()
         }

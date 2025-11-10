@@ -11,8 +11,10 @@ import com.example.partsphere.presentation.owner.model.DeleteResponse
 import com.example.partsphere.presentation.owner.model.EmployeeCountResponse
 import com.example.partsphere.presentation.owner.model.FactoryLocationResponse
 import com.example.partsphere.presentation.owner.model.FactoryResponse
+import com.example.partsphere.presentation.owner.model.PlantHeadResponse
 import com.example.partsphere.presentation.owner.model.UnassignedPlantHead
 import com.example.partsphere.presentation.owner.model.UpdateCentralOfficerRequest
+import com.example.partsphere.presentation.owner.model.UpdateFactoryRequest
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.Response
@@ -66,11 +68,18 @@ interface DistributorApi {
 
 
     //Update Factory
+//    @PATCH("/api/factory/update/{id}")
+//    suspend fun updateFactory(
+//        @Path("id") id: Int,
+//        @Body body: Map<String, String>
+//    ): Response<Unit>
+
     @PATCH("/api/factory/update/{id}")
     suspend fun updateFactory(
-        @Path("id") id: Int,
-        @Body body: Map<String, String>
-    ): Response<Unit>
+        @Path("id") factoryId: Int,
+        @Body request: UpdateFactoryRequest
+    ): Response<Map<String, String>> // response like { "message": "Factory updated successfully!" }
+
 
 
     //Create New Factory
@@ -116,10 +125,13 @@ interface DistributorApi {
 
 
 
-    @GET("api/users/unassigned-planthead")
+    //  GET unassigned plant heads
+    @GET("/api/users/unassigned-planthead")
     suspend fun getUnassignedPlantHeads(): Response<List<UnassignedPlantHead>>
 
 
 
+        @GET("api/users/role/plant-head")
+        suspend fun getPlantHeads(): Response<List<PlantHeadResponse>>
 
 }

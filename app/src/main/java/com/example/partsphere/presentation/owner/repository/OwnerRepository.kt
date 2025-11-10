@@ -9,7 +9,10 @@ import com.example.partsphere.presentation.owner.model.CreateFactoryResponse
 import com.example.partsphere.presentation.owner.model.EmployeeCount
 import com.example.partsphere.presentation.owner.model.FactoryLocation
 import com.example.partsphere.presentation.owner.model.FactoryResponse
+import com.example.partsphere.presentation.owner.model.PlantHeadResponse
+import com.example.partsphere.presentation.owner.model.UnassignedPlantHead
 import com.example.partsphere.presentation.owner.model.UpdateCentralOfficerRequest
+import com.example.partsphere.presentation.owner.model.UpdateFactoryRequest
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -65,10 +68,16 @@ class OwnerRepository @Inject constructor(
     }
 
     // OwnerRepository.kt
-    suspend fun updateFactory(factoryId: Int, newName: String): Boolean {
-        val requestBody = mapOf("name" to newName)
-        val response = api.updateFactory(factoryId, requestBody)
-        return response.isSuccessful
+    suspend fun updateFactory(factoryId: Int, request: UpdateFactoryRequest): Response<Map<String, String>> {
+        return withContext(Dispatchers.IO) {
+            api.updateFactory(factoryId, request)
+        }
+    }
+
+    suspend fun getUnassignedPlantHeads(): Response<List<UnassignedPlantHead>> {
+        return withContext(Dispatchers.IO) {
+            api.getUnassignedPlantHeads()
+        }
     }
 
     suspend fun createFactory(name: String, location: String): Result<CreateFactoryResponse> {
@@ -206,6 +215,11 @@ class OwnerRepository @Inject constructor(
     }
 
 
+
+        suspend fun getPlantHeads(): List<PlantHeadResponse>? {
+            val response = api.getPlantHeads()
+            return if (response.isSuccessful) response.body() else null
+        }
 
 
 

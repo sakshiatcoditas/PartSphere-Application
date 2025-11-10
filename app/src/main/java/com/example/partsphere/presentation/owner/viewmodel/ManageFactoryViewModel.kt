@@ -2,10 +2,19 @@ package com.example.partsphere.presentation.owner.viewmodel
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.partsphere.presentation.owner.model.CentralOfficerUiState
 import com.example.partsphere.presentation.owner.model.FactoryItem
+import com.example.partsphere.presentation.owner.model.PlantHeadResponse
+import com.example.partsphere.presentation.owner.model.UnassignedPlantHead
+import com.example.partsphere.presentation.owner.model.UpdateFactoryRequest
 import com.example.partsphere.presentation.owner.repository.OwnerRepository
 import com.example.partsphere.presentation.owner.ui.manageemployee.CentralOfficer
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -50,27 +59,63 @@ class ManageFactoryViewModel @Inject constructor(
         }
     }
 
-    fun updateFactory(factoryId: Int, newName: String, onResult: (Boolean) -> Unit) {
+    private val _unassignedPlantHeads = MutableStateFlow<List<UnassignedPlantHead>>(emptyList())
+    val unassignedPlantHeads: StateFlow<List<UnassignedPlantHead>> = _unassignedPlantHeads
+
+    private val _updateMessage = MutableStateFlow<String?>(null)
+    val updateMessage: StateFlow<String?> = _updateMessage
+
+    fun fetchUnassignedPlantHeads() {
         viewModelScope.launch {
-            _isLoading.value = true
-            _errorMessage.value = null
-            try {
-                val success = repository.updateFactory(factoryId, newName)
-                if (success) {
-                    // Update local list immediately
-                    _factories.value = _factories.value.map {
-                        if (it.id == factoryId) it.copy(name = newName) else it
-                    }
-                }
-                onResult(success)
-            } catch (e: Exception) {
-                _errorMessage.value = e.localizedMessage ?: "Unknown error"
-                onResult(false)
-            } finally {
-                _isLoading.value = false
+            val response = repository.getUnassignedPlantHeads()
+            if (response.isSuccessful) {
+                val list = response.body().orEmpty()
+                Log.d("API_DEBUG", "Fetched unassigned plant heads: $list")
+                _unassignedPlantHeads.value = list
+            } else {
+                Log.e("API_DEBUG", "Error: ${response.code()} - ${response.message()}")
             }
         }
     }
+
+
+    fun updateFactory(factoryId: Int, request: UpdateFactoryRequest) {
+        viewModelScope.launch {
+            val response = repository.updateFactory(factoryId, request)
+            if (response.isSuccessful) {
+                _updateMessage.value = response.body()?.get("message")
+            } else {
+                _updateMessage.value = "Update failed"
+            }
+        }
+    }
+
+    fun clearUpdateMessage() {
+        _updateMessage.value = null
+    }
+
+
+//    fun updateFactory(factoryId: Int, newName: String, onResult: (Boolean) -> Unit) {
+//        viewModelScope.launch {
+//            _isLoading.value = true
+//            _errorMessage.value = null
+//            try {
+//                val success = repository.updateFactory(factoryId, newName)
+//                if (success) {
+//                    // Update local list immediately
+//                    _factories.value = _factories.value.map {
+//                        if (it.id == factoryId) it.copy(name = newName) else it
+//                    }
+//                }
+//                onResult(success)
+//            } catch (e: Exception) {
+//                _errorMessage.value = e.localizedMessage ?: "Unknown error"
+//                onResult(false)
+//            } finally {
+//                _isLoading.value = false
+//            }
+//        }
+//    }
 
     private val _isCreating = MutableStateFlow(false)
     val isCreating = _isCreating.asStateFlow()
@@ -224,6 +269,29 @@ class ManageFactoryViewModel @Inject constructor(
 
 
 
+    var plantHeads by mutableStateOf<List<PlantHeadResponse>>(emptyList())
+        private set
+
+    var loading by mutableStateOf(false)
+        private set
+
+    var error by mutableStateOf<String?>(null)
+        private set
+
+    fun fetchPlantHeads() {
+        viewModelScope.launch {
+            try {
+                loading = true
+                val data = repository.getPlantHeads()
+                plantHeads = data ?: emptyList()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                error = e.message
+            } finally {
+                loading = false
+            }
+        }
+    }
 
 
 
