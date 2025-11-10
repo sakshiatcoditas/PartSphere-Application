@@ -1,23 +1,82 @@
 package com.example.partsphere.presentation.owner.ui.manageemployee
-
+import androidx.compose.ui.text.input.TextFieldValue
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.rememberAsyncImagePainter
+import com.example.partsphere.presentation.owner.ui.components.SearchBar
 
+// ---------------- DATA CLASS ----------------
+data class PlantHead(
+    val name: String,
+    val email: String,
+    val designation: String,
+    val factory: String,
+    val photoUri: Uri? = null
+)
+
+// ---------------- PLANT HEAD SCREEN ----------------
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlantHeadScreen(
     onBackClick: () -> Unit = {}
 ) {
-    Scaffold(
-        topBar = {
+    var searchText by remember { mutableStateOf("") }
+    var showDialog by remember { mutableStateOf(false) }
+    var currentEditingHead by remember { mutableStateOf<PlantHead?>(null) }
+
+    // Sample list
+    var plantHeads by remember {
+        mutableStateOf(
+            mutableListOf(
+                PlantHead("Ravi Kumar", "ravi@example.com", "Manager", "Mumbai Plant"),
+                PlantHead("Anjali Mehta", "anjali@example.com", "Supervisor", "Pune Plant")
+            )
+        )
+    }
+
+    val filteredHeads = plantHeads.filter { it.name.contains(searchText, ignoreCase = true) }
+
+    val allFactories = listOf("Mumbai Plant", "Pune Plant", "Delhi Plant")
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.White)
+                .padding(horizontal = 16.dp)
+        ) {
             TopAppBar(
                 title = { Text("Plant Heads") },
                 navigationIcon = {
@@ -30,19 +89,374 @@ fun PlantHeadScreen(
                     titleContentColor = Color.Black
                 )
             )
-        }
-    ) { padding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "Hello Plant Head",
-                fontSize = 24.sp,
-                color = Color.Black
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            SearchBar(
+                query = searchText,
+                onQueryChange = { searchText = it },
+                placeholderText = "Search Plant Heads"
             )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                if (filteredHeads.isEmpty()) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillParentMaxSize()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("No results found", fontSize = 16.sp, color = Color.Gray)
+                        }
+                    }
+                } else {
+                    items(filteredHeads) { head ->
+                        PlantHeadCard(
+                            plantHead = head,
+                            onEdit = {
+                                currentEditingHead = head
+                                showDialog = true
+                            },
+                            onDelete = {
+                                plantHeads = plantHeads.toMutableList().also { it.remove(head) }
+                            }
+                        )
+                    }
+
+                }
+            }
         }
+
+        FloatingActionButton(
+            onClick = {
+                currentEditingHead = null // Adding new head
+                showDialog = true
+            },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(20.dp),
+            containerColor = Color.Black,
+            shape = CircleShape
+        ) {
+            Icon(Icons.Default.Add, contentDescription = "Add Plant Head", tint = Color.White)
+        }
+    }
+
+    if (showDialog) {
+        AddPlantHeadDialog(
+            allFactories = allFactories,
+            initialData = currentEditingHead,
+            onDismiss = { showDialog = false },
+            onAdd = { name, email, designation, factory, photoUri ->
+                if (currentEditingHead != null) {
+                    // Update existing
+                    plantHeads = plantHeads.map {
+                        if (it == currentEditingHead) PlantHead(name, email, designation, factory, photoUri)
+                        else it
+                    }.toMutableList()
+                } else {
+                    // Add new
+                    plantHeads = (plantHeads + PlantHead(name, email, designation, factory, photoUri)).toMutableList()
+                }
+                showDialog = false
+            }
+        )
+    }
+}
+
+// ---------------- ADD / EDIT DIALOG ----------------
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AddPlantHeadDialog(
+    allFactories: List<String>,
+    onDismiss: () -> Unit,
+    onAdd: (name: String, email: String, designation: String, factory: String, photoUri: Uri?) -> Unit,
+    initialData: PlantHead? = null
+) {
+    var name by remember { mutableStateOf(TextFieldValue(initialData?.name ?: "")) }
+    var email by remember { mutableStateOf(TextFieldValue(initialData?.email ?: "")) }
+    var designation by remember { mutableStateOf(initialData?.designation ?: "") }
+    var designationExpanded by remember { mutableStateOf(false) }
+    var selectedFactory by remember { mutableStateOf(initialData?.factory ?: "") }
+    var factoryExpanded by remember { mutableStateOf(false) }
+    var photoUri by remember { mutableStateOf(initialData?.photoUri) }
+
+    val designations = listOf("Plant-Head", "Chief-Supervisor")
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = { uri -> photoUri = uri }
+    )
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {},
+        text = {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = if (initialData != null) "Edit Plant Head" else "Add New Plant Head",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                // --- Photo ---
+                Box(
+                    modifier = Modifier
+                        .size(100.dp)
+                        .align(Alignment.CenterHorizontally)
+                        .background(Color.LightGray, CircleShape)
+                        .clickable { launcher.launch("image/*") },
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (photoUri != null) {
+                        Image(
+                            painter = rememberAsyncImagePainter(photoUri),
+                            contentDescription = "Selected Photo",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        Text("Upload Photo", fontSize = 14.sp, color = Color.Black)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // --- Name ---
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Full Name") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // --- Email ---
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("Email") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // --- Designation Dropdown ---
+                ExposedDropdownMenuBox(
+                    expanded = designationExpanded,
+                    onExpandedChange = { designationExpanded = !designationExpanded }
+                ) {
+                    OutlinedTextField(
+                        value = designation,
+                        onValueChange = {},
+                        label = { Text("Designation") },
+                        readOnly = true,
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(designationExpanded) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor(),
+                    )
+                    ExposedDropdownMenu(
+                        expanded = designationExpanded,
+                        onDismissRequest = { designationExpanded = false },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.White, RoundedCornerShape(12.dp))
+                            .border(1.dp, Color.LightGray, RoundedCornerShape(12.dp))
+                    ) {
+                        designations.forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(option, color = Color.Black) },
+                                onClick = {
+                                    designation = option
+                                    designationExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // --- Factory Dropdown ---
+                ExposedDropdownMenuBox(
+                    expanded = factoryExpanded,
+                    onExpandedChange = { factoryExpanded = !factoryExpanded }
+                ) {
+                    OutlinedTextField(
+                        value = selectedFactory,
+                        onValueChange = { selectedFactory = it },
+                        label = { Text("Factory Associated") },
+                        readOnly = true,
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(factoryExpanded) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor(),
+                    )
+                    ExposedDropdownMenu(
+                        expanded = factoryExpanded,
+                        onDismissRequest = { factoryExpanded = false },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.White, RoundedCornerShape(12.dp))
+                            .border(1.dp, Color.LightGray, RoundedCornerShape(12.dp))
+                    ) {
+                        allFactories.forEach { factory ->
+                            DropdownMenuItem(
+                                text = { Text(factory, color = Color.Black) },
+                                onClick = {
+                                    selectedFactory = factory
+                                    factoryExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // --- Buttons ---
+                Row(
+                    horizontalArrangement = Arrangement.End,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    TextButton(onClick = onDismiss) { Text("Cancel", color = Color.Gray) }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = {
+                            if (name.text.isNotBlank() && email.text.isNotBlank() &&
+                                designation.isNotBlank() && selectedFactory.isNotBlank()
+                            ) {
+                                onAdd(name.text, email.text, designation, selectedFactory, photoUri)
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
+                    ) {
+                        Text(if (initialData != null) "Update" else "Add", color = Color.White)
+                    }
+                }
+            }
+        },
+        shape = RoundedCornerShape(16.dp),
+        containerColor = Color.White
+    )
+}
+
+
+
+
+// ---------------- PLANT HEAD CARD ----------------
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PlantHeadCard(
+    plantHead: PlantHead,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
+) {
+    var isPressed by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    val scale by animateFloatAsState(if (isPressed) 0.95f else 1f, tween(100))
+    val overlayColor by animateColorAsState(if (isPressed) Color(0x33000000) else Color.Transparent, tween(150))
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .graphicsLayer { scaleX = scale; scaleY = scale }
+            .background(overlayColor)
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onPress = {
+                        isPressed = true
+                        tryAwaitRelease()
+                        isPressed = false
+                    }
+                )
+            },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row {
+                // --- Photo ---
+                Box(
+                    modifier = Modifier
+                        .size(60.dp)
+                        .background(Color.LightGray, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (plantHead.photoUri != null) {
+                        Image(
+                            painter = rememberAsyncImagePainter(plantHead.photoUri),
+                            contentDescription = "Plant Head Photo",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        Text("No Photo", fontSize = 10.sp)
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                // --- Details ---
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(plantHead.name, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Text("Email: ${plantHead.email}", fontSize = 14.sp, color = Color.Gray)
+                    Text("Designation: ${plantHead.designation}", fontSize = 14.sp, color = Color.Gray)
+                    Text("Factory: ${plantHead.factory}", fontSize = 14.sp, color = Color.Gray)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // --- Edit/Delete Buttons like FactoryCard ---
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                OutlinedButton(
+                    onClick = onEdit,
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Black)
+                ) {
+                    Text("Edit")
+                }
+
+                OutlinedButton(
+                    onClick = { showDeleteDialog = true },
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Black)
+                ) {
+                    Text("Delete")
+                }
+            }
+        }
+    }
+
+    // --- Delete Confirmation ---
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Delete Plant Head") },
+            text = { Text("Are you sure you want to delete ${plantHead.name}?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    onDelete()
+                    showDeleteDialog = false
+                }) { Text("Delete", color = Color.Red) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) { Text("Cancel", color = Color.Gray) }
+            }
+        )
     }
 }

@@ -110,7 +110,7 @@ fun CentralOfficerScreen(
                 .padding(innerPadding)
                 .background(Color.White)
         ) {
-            // 🔍 Search Bar (fixed top)
+            //  Search Bar (fixed top)
             SearchBar(
                 query = searchQuery,
                 onQueryChange = { searchQuery = it },
@@ -120,10 +120,9 @@ fun CentralOfficerScreen(
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             )
 
-            //  Scrollable full-height list
             LazyColumn(
                 modifier = Modifier
-                    .fillMaxSize(), //  key change — replaces weight(1f)
+                    .fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 contentPadding = PaddingValues(
                     start = 16.dp,
