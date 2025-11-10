@@ -169,10 +169,11 @@ class OwnerRepository @Inject constructor(
     }
 
     suspend fun updateCentralOfficer(
+        context: Context,
         officerId: Int,
         username: String,
         email: String,
-        photoUri: Uri? // nullable
+        photoUri: Uri?
     ): Result<AddCOResponse> {
         return try {
             val idPart = officerId.toString().toRequestBody()
@@ -180,11 +181,15 @@ class OwnerRepository @Inject constructor(
             val emailPart = email.toRequestBody()
 
             val photoPart = photoUri?.let { uri ->
-                val file = File(uri.path!!)
+                val inputStream = context.contentResolver.openInputStream(uri)
+                    ?: return Result.failure(Exception("Cannot open image"))
+
+                val bytes = inputStream.readBytes()
+                val requestBody = bytes.toRequestBody("image/*".toMediaTypeOrNull())
                 MultipartBody.Part.createFormData(
                     "photo",
-                    file.name,
-                    file.asRequestBody("image/*".toMediaTypeOrNull())
+                    "image.jpg", // name doesn't matter much
+                    requestBody
                 )
             }
 
@@ -199,6 +204,8 @@ class OwnerRepository @Inject constructor(
             Result.failure(e)
         }
     }
+
+
 
 
 

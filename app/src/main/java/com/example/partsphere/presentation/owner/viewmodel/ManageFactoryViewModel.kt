@@ -1,5 +1,6 @@
 package com.example.partsphere.presentation.owner.viewmodel
 
+import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -195,16 +196,17 @@ class ManageFactoryViewModel @Inject constructor(
     }
 
     fun updateCentralOfficer(
+        context: Context,  // add context here
         officerId: Int,
         username: String,
         email: String,
-        photoUri: Uri?,   // changed from String? to Uri?
+        photoUri: Uri?,
         onResult: (Boolean) -> Unit
     ) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
-            val result = repository.updateCentralOfficer(officerId, username, email, photoUri)
+            val result = repository.updateCentralOfficer(context, officerId, username, email, photoUri)
 
             if (result.isSuccess) {
                 fetchCentralOfficers() // refresh list after update
@@ -217,6 +219,7 @@ class ManageFactoryViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = false) }
         }
     }
+
 
 
 

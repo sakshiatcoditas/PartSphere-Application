@@ -313,17 +313,19 @@ fun CentralOfficerCard(
     }
 
     if (showEditDialog) {
+        val context = LocalContext.current  // get context here
+
         AddCentralOfficerDialog(
             onDismiss = { showEditDialog = false },
             onAdd = { name, email, photoUri, _ ->  // ignore existingPhotoUrl
                 val officerId = officer.id
 
-                // Pass new photoUri if selected, else null
                 viewModel.updateCentralOfficer(
-                    officerId,
-                    name,
-                    email,
-                    photoUri // null = keep existing, Uri = upload new
+                    context = context,  // pass context first
+                    officerId = officerId,
+                    username = name,
+                    email = email,
+                    photoUri = photoUri // null = keep existing, Uri = upload new
                 ) { success ->
                     if (success) showEditDialog = false
                 }
@@ -331,9 +333,6 @@ fun CentralOfficerCard(
             initialData = officer
         )
     }
-
-
-
 
 
 
