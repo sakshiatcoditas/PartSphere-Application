@@ -175,13 +175,14 @@ fun CentralOfficerScreen(
         if (showDialog) {
             AddCentralOfficerDialog(
                 onDismiss = { showDialog = false },
-                onAdd = { name, email, photoUri ->
+                onAdd = { name, email, photoUri, _ ->   // 4th param ignored for new add
                     viewModel.addCentralOfficer(name, email, photoUri)
                     showDialog = false
                 },
                 initialData = officerToEdit
             )
         }
+
     }
 
    // loading overlay
@@ -314,23 +315,24 @@ fun CentralOfficerCard(
     if (showEditDialog) {
         AddCentralOfficerDialog(
             onDismiss = { showEditDialog = false },
-            onAdd = { name, email, photoUri ->
+            onAdd = { name, email, photoUri, _ ->  // ignore existingPhotoUrl
                 val officerId = officer.id
-                val photoToSend = photoUri?.toString() ?: officer.photoUrl  // use existing photo if unchanged
+
+                // Pass new photoUri if selected, else null
                 viewModel.updateCentralOfficer(
-                    officer.id,
+                    officerId,
                     name,
                     email,
-                    photoUri
+                    photoUri // null = keep existing, Uri = upload new
                 ) { success ->
                     if (success) showEditDialog = false
                 }
-
-
             },
             initialData = officer
         )
     }
+
+
 
 
 
@@ -340,7 +342,7 @@ fun CentralOfficerCard(
 @Composable
 fun AddCentralOfficerDialog(
     onDismiss: () -> Unit,
-    onAdd: (name: String, email: String, photoUri: Uri?) -> Unit,
+    onAdd: (name: String, email: String, photoUri: Uri?, existingPhotoUrl: String?) -> Unit,
     initialData: CentralOfficer? = null
 ) {
     var name by remember { mutableStateOf(TextFieldValue(initialData?.name ?: "")) }
@@ -372,16 +374,28 @@ fun AddCentralOfficerDialog(
                         .clickable { launcher.launch("image/*") },
                     contentAlignment = Alignment.Center
                 ) {
-                    if (photoUri != null) {
-                        Image(
-                            painter = rememberAsyncImagePainter(photoUri),
-                            contentDescription = "Selected Photo",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    } else {
-                        Text("Upload Photo", color = Color.Black, fontSize = 14.sp)
+                    when {
+                        photoUri != null -> { // user picked new photo
+                            Image(
+                                painter = rememberAsyncImagePainter(photoUri),
+                                contentDescription = "Selected Photo",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                        initialData?.photoUrl != null -> { // existing photo from backend
+                            Image(
+                                painter = rememberAsyncImagePainter(initialData.photoUrl),
+                                contentDescription = "Existing Photo",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                        else -> {
+                            Text("Upload Photo", color = Color.Black, fontSize = 14.sp)
+                        }
                     }
+
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -413,7 +427,8 @@ fun AddCentralOfficerDialog(
                     Button(
                         onClick = {
                             if (name.text.isNotBlank() && email.text.isNotBlank()) {
-                                onAdd(name.text, email.text, photoUri)
+                                // Pass both photoUri (new photo) and existing photo URL
+                                onAdd(name.text, email.text, photoUri, initialData?.photoUrl)
                             }
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
@@ -425,3 +440,4 @@ fun AddCentralOfficerDialog(
         containerColor = Color.White
     )
 }
+
