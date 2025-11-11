@@ -13,6 +13,7 @@ import com.example.partsphere.presentation.owner.model.AddChiefSupervisorRespons
 import com.example.partsphere.presentation.owner.model.CentralOfficerUiState
 import com.example.partsphere.presentation.owner.model.FactoryItem
 import com.example.partsphere.presentation.owner.model.PlantHeadResponse
+import com.example.partsphere.presentation.owner.model.SupervisorFactory
 import com.example.partsphere.presentation.owner.model.UnassignedPlantHead
 import com.example.partsphere.presentation.owner.model.UpdateFactoryRequest
 import com.example.partsphere.presentation.owner.repository.OwnerRepository
@@ -353,6 +354,12 @@ class ManageFactoryViewModel @Inject constructor(
     private val _chiefUiState = MutableStateFlow(ChiefSupervisorUiState())
     val chiefUiState: StateFlow<ChiefSupervisorUiState> = _chiefUiState
 
+    private val _supervisorFactories = MutableStateFlow<List<SupervisorFactory>>(emptyList())
+    val supervisorFactories: StateFlow<List<SupervisorFactory>> = _supervisorFactories
+
+    private val _isAddingSupervisor = MutableStateFlow(false)
+    val isAddingSupervisor = _isAddingSupervisor.asStateFlow()
+
     fun fetchChiefSupervisors(loadMore: Boolean = false) {
         viewModelScope.launch {
             if (!loadMore) {
@@ -384,8 +391,44 @@ class ManageFactoryViewModel @Inject constructor(
         }
     }
 
+    fun fetchFactoriesForSupervisor() {
+        viewModelScope.launch {
+            val result = repository.getFactoriesForSupervisor()
+            result.onSuccess { factories ->
+                _supervisorFactories.value = factories
+            }.onFailure { e ->
+                // Optional: handle error
+                _supervisorFactories.value = emptyList()
+            }
+        }
+    }
 
-
-
+    // ------------------ ADD CHIEF SUPERVISOR ------------------
+    fun addChiefSupervisor(
+        name: String,
+        email: String,
+        factoryId: Long,
+        photoUri: Uri?,
+        onResult: (Boolean, String) -> Unit
+    ) {
+        viewModelScope.launch {
+            _isAddingSupervisor.value = true
+            val result = repository.addChiefSupervisor(name, email, factoryId, photoUri)
+            result.onSuccess { supervisor ->
+                _chiefUiState.update {
+                    it.copy(supervisors = it.supervisors + supervisor)
+                }
+                onResult(true, "Supervisor added successfully")
+            }.onFailure { e ->
+                onResult(false, e.message ?: "Failed to add supervisor")
+            }
+            _isAddingSupervisor.value = false
+        }
+    }
 }
+
+
+
+
+
 

@@ -11,6 +11,7 @@ import com.example.partsphere.presentation.owner.model.EmployeeCount
 import com.example.partsphere.presentation.owner.model.FactoryLocation
 import com.example.partsphere.presentation.owner.model.FactoryResponse
 import com.example.partsphere.presentation.owner.model.PlantHeadResponse
+import com.example.partsphere.presentation.owner.model.SupervisorFactory
 import com.example.partsphere.presentation.owner.model.UnassignedPlantHead
 import com.example.partsphere.presentation.owner.model.UpdateCentralOfficerRequest
 import com.example.partsphere.presentation.owner.model.UpdateFactoryRequest
@@ -36,7 +37,7 @@ class OwnerRepository @Inject constructor(
             val body = response.body()
             return body?.data?.map { dto ->
                 EmployeeCount(
-                    role = dto.role ,
+                    role = dto.role,
                     count = dto.count
                 )
             } ?: emptyList()
@@ -69,7 +70,10 @@ class OwnerRepository @Inject constructor(
     }
 
     // OwnerRepository.kt
-    suspend fun updateFactory(factoryId: Int, request: UpdateFactoryRequest): Response<Map<String, String>> {
+    suspend fun updateFactory(
+        factoryId: Int,
+        request: UpdateFactoryRequest
+    ): Response<Map<String, String>> {
         return withContext(Dispatchers.IO) {
             api.updateFactory(factoryId, request)
         }
@@ -127,8 +131,11 @@ class OwnerRepository @Inject constructor(
 
             val photoPart: MultipartBody.Part? = photoUri?.let { uri ->
                 val inputStream = context.contentResolver.openInputStream(uri)
-                val tempFile = File(context.cacheDir, "temp_photo_${System.currentTimeMillis()}.jpg")
-                inputStream?.use { input -> tempFile.outputStream().use { output -> input.copyTo(output) } }
+                val tempFile =
+                    File(context.cacheDir, "temp_photo_${System.currentTimeMillis()}.jpg")
+                inputStream?.use { input ->
+                    tempFile.outputStream().use { output -> input.copyTo(output) }
+                }
 
                 val requestFile = tempFile.asRequestBody("image/*".toMediaTypeOrNull())
                 MultipartBody.Part.createFormData("photo", tempFile.name, requestFile)
@@ -150,57 +157,63 @@ class OwnerRepository @Inject constructor(
     // Get all central officers
 
 
-
     private var currentPage = 0
     private val pageSize = 3
     private var isLastPage = false
 
-    suspend fun getAllCentralOfficers(loadAll: Boolean = false): Result<List<AddCOResponse>> = withContext(Dispatchers.IO) {
-        try {
-            // When we want all data (initial load), reset pagination
-            if (loadAll) {
-                currentPage = 0
-                isLastPage = false
-            }
+    suspend fun getAllCentralOfficers(loadAll: Boolean = false): Result<List<AddCOResponse>> =
+        withContext(Dispatchers.IO) {
+            try {
+                // When we want all data (initial load), reset pagination
+                if (loadAll) {
+                    currentPage = 0
+                    isLastPage = false
+                }
 
-            val allOfficers = mutableListOf<AddCOResponse>()
+                val allOfficers = mutableListOf<AddCOResponse>()
 
-            // Load all pages only once during app start
-            if (loadAll) {
-                do {
+                // Load all pages only once during app start
+                if (loadAll) {
+                    do {
+                        val response = api.getAllCentralOfficers(currentPage, pageSize)
+                        if (response.isSuccessful && response.body() != null) {
+                            val paginatedResponse = response.body()!!
+                            allOfficers.addAll(paginatedResponse.content)
+                            currentPage = paginatedResponse.number + 1
+                            isLastPage = paginatedResponse.last
+                        } else {
+                            return@withContext Result.failure(
+                                Exception(
+                                    response.errorBody()?.string() ?: "Unknown error"
+                                )
+                            )
+                        }
+                    } while (!isLastPage)
+                }
+                // Load only next page during pagination
+                else {
+                    if (isLastPage) return@withContext Result.success(emptyList())
+
                     val response = api.getAllCentralOfficers(currentPage, pageSize)
                     if (response.isSuccessful && response.body() != null) {
                         val paginatedResponse = response.body()!!
-                        allOfficers.addAll(paginatedResponse.content)
                         currentPage = paginatedResponse.number + 1
                         isLastPage = paginatedResponse.last
+                        allOfficers.addAll(paginatedResponse.content)
                     } else {
-                        return@withContext Result.failure(Exception(response.errorBody()?.string() ?: "Unknown error"))
+                        return@withContext Result.failure(
+                            Exception(
+                                response.errorBody()?.string() ?: "Unknown error"
+                            )
+                        )
                     }
-                } while (!isLastPage)
-            }
-            // Load only next page during pagination
-            else {
-                if (isLastPage) return@withContext Result.success(emptyList())
-
-                val response = api.getAllCentralOfficers(currentPage, pageSize)
-                if (response.isSuccessful && response.body() != null) {
-                    val paginatedResponse = response.body()!!
-                    currentPage = paginatedResponse.number + 1
-                    isLastPage = paginatedResponse.last
-                    allOfficers.addAll(paginatedResponse.content)
-                } else {
-                    return@withContext Result.failure(Exception(response.errorBody()?.string() ?: "Unknown error"))
                 }
+
+                Result.success(allOfficers)
+            } catch (e: Exception) {
+                Result.failure(e)
             }
-
-            Result.success(allOfficers)
-        } catch (e: Exception) {
-            Result.failure(e)
         }
-    }
-
-
 
 
     suspend fun deleteCentralOfficer(id: Int): Result<String> {
@@ -246,13 +259,16 @@ class OwnerRepository @Inject constructor(
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!)
             } else {
-                Result.failure(Exception(response.errorBody()?.string() ?: "Failed to update officer"))
+                Result.failure(
+                    Exception(
+                        response.errorBody()?.string() ?: "Failed to update officer"
+                    )
+                )
             }
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
-
 
 
     suspend fun getPlantHeads(): List<PlantHeadResponse>? {
@@ -274,7 +290,6 @@ class OwnerRepository @Inject constructor(
 //            Result.failure(e)
 //        }
 //    }
-
 
 
 //  Chief Supervisor Pagination
@@ -333,6 +348,64 @@ class OwnerRepository @Inject constructor(
         }
 
 
+    suspend fun getFactoriesForSupervisor(): Result<List<SupervisorFactory>> =
+        withContext(Dispatchers.IO) {
+            try {
+                val response = api.getAllFactoriesForSupervisor()
+                if (response.isSuccessful && response.body() != null) {
+                    // Extract only the data array
+                    Result.success(response.body()!!.data)
+                } else {
+                    Result.failure(
+                        Exception(response.errorBody()?.string() ?: "Failed to fetch factories")
+                    )
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+
+
+    // Add Chief Supervisor
+    suspend fun addChiefSupervisor(
+        name: String,
+        email: String,
+        factoryId: Long, // changed from Int to Long
+        photoUri: Uri?
+    ): Result<AddChiefSupervisorResponse> = withContext(Dispatchers.IO) {
+        try {
+            val namePart = name.toRequestBody("text/plain".toMediaTypeOrNull())
+            val emailPart = email.toRequestBody("text/plain".toMediaTypeOrNull())
+            val factoryPart = factoryId.toString()
+                .toRequestBody("text/plain".toMediaTypeOrNull())
+            val rolePart = "CHIEF_SUPERVISOR".toRequestBody("text/plain".toMediaTypeOrNull())
+
+            val photoPart: MultipartBody.Part? = photoUri?.let { uri ->
+                val inputStream = context.contentResolver.openInputStream(uri)
+                val tempFile = File(context.cacheDir, "temp_photo_${System.currentTimeMillis()}.jpg")
+                inputStream?.use { input -> tempFile.outputStream().use { output -> input.copyTo(output) } }
+
+                val requestFile = tempFile.asRequestBody("image/*".toMediaTypeOrNull())
+                MultipartBody.Part.createFormData("photo", tempFile.name, requestFile)
+            }
+
+            val response = api.addChiefSupervisor(
+                namePart,
+                emailPart,
+                factoryPart,
+                rolePart,    // role included
+                photoPart
+            )
+
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                Result.failure(Exception(response.errorBody()?.string() ?: "Unknown error"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 
 
 

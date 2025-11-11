@@ -155,14 +155,16 @@ fun CentralOfficerScreen(
                     item {
                         Box(
                             modifier = Modifier
-                                .fillParentMaxSize()
+                                .fillMaxWidth()
+                                .height(200.dp) // fixed height prevents infinite measurement
                                 .padding(top = 100.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text("No Central Officers found", fontSize = 16.sp, color = Color.Gray)
                         }
                     }
-                } else {
+                }
+                else {
                     items(filteredOfficers) { officer ->
                         CentralOfficerCard(
                             officer = officer,

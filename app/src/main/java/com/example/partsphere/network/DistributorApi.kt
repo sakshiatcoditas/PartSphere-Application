@@ -4,6 +4,7 @@ import com.example.partsphere.model.DistributorRegistrationResponse
 import com.example.partsphere.presentation.login_screen.model.LoginRequest
 import com.example.partsphere.presentation.login_screen.model.LoginResponse
 import com.example.partsphere.presentation.owner.model.AddCOResponse
+import com.example.partsphere.presentation.owner.model.AddChiefSupervisorResponse
 import com.example.partsphere.presentation.owner.model.ChiefSupervisorPaginatedResponse
 import com.example.partsphere.presentation.owner.model.CreateFactoryRequest
 import com.example.partsphere.presentation.owner.model.CreateFactoryResponse
@@ -11,10 +12,12 @@ import com.example.partsphere.presentation.owner.model.DeleteFactoryResponse
 import com.example.partsphere.presentation.owner.model.DeletePlantHeadResponse
 import com.example.partsphere.presentation.owner.model.DeleteResponse
 import com.example.partsphere.presentation.owner.model.EmployeeCountResponse
+import com.example.partsphere.presentation.owner.model.FactoryDropdownResponse
 import com.example.partsphere.presentation.owner.model.FactoryLocationResponse
 import com.example.partsphere.presentation.owner.model.FactoryResponse
 import com.example.partsphere.presentation.owner.model.PaginatedCOResponse
 import com.example.partsphere.presentation.owner.model.PlantHeadResponse
+import com.example.partsphere.presentation.owner.model.SupervisorFactory
 import com.example.partsphere.presentation.owner.model.UnassignedPlantHead
 import com.example.partsphere.presentation.owner.model.UpdateCentralOfficerRequest
 import com.example.partsphere.presentation.owner.model.UpdateFactoryRequest
@@ -153,6 +156,23 @@ interface DistributorApi {
         @Query("page") page: Int,
         @Query("size") size: Int
     ): Response<ChiefSupervisorPaginatedResponse>
+
+    @Multipart
+    @POST("/api/users/ph-supervisor")
+    suspend fun addChiefSupervisor(
+        @Part("username") name: RequestBody,
+        @Part("email") email: RequestBody,
+        @Part("fcatory_id") factoryId: RequestBody,
+        @Part("role") role: RequestBody,
+
+        @Part photo: MultipartBody.Part?
+    ): Response<AddChiefSupervisorResponse>
+
+    @GET("/api/factory")
+    suspend fun getAllFactoriesForSupervisor(
+        @Query("type") type: String = "all"
+    ): Response<FactoryDropdownResponse>
+
 
 
 }

@@ -44,7 +44,7 @@ data class ChiefSupervisor(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChiefSupervisorScreen(
-    viewModel: ManageFactoryViewModel = hiltViewModel(), // your actual ViewModel
+    viewModel: ManageFactoryViewModel = hiltViewModel(),
     onBackClick: () -> Unit = {}
 ) {
     val uiState by viewModel.chiefUiState.collectAsState()
@@ -54,12 +54,13 @@ fun ChiefSupervisorScreen(
 
     val listState = rememberLazyListState()
 
-    // Initial data load when screen opens
+    // Fetch supervisors and factories when screen opens
     LaunchedEffect(Unit) {
         viewModel.fetchChiefSupervisors(loadMore = false)
+        viewModel.fetchFactoriesForSupervisor()
     }
 
-    // Pagination: load more when near end
+    // Pagination
     LaunchedEffect(listState) {
         snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
             .collect { lastVisibleIndex ->
@@ -113,7 +114,6 @@ fun ChiefSupervisorScreen(
                         CircularProgressIndicator()
                     }
                 }
-
                 uiState.error != null -> {
                     Box(
                         modifier = Modifier.fillMaxSize(),
@@ -126,7 +126,6 @@ fun ChiefSupervisorScreen(
                         )
                     }
                 }
-
                 else -> {
                     LazyColumn(
                         state = listState,
@@ -147,7 +146,7 @@ fun ChiefSupervisorScreen(
                                     showDialog = true
                                 },
                                 onDelete = {
-                                    // Add delete logic here if needed
+                                    // Delete logic to implement later
                                 }
                             )
                         }
@@ -171,7 +170,7 @@ fun ChiefSupervisorScreen(
 
         FloatingActionButton(
             onClick = {
-                currentEditingSupervisor = null // Add new supervisor
+                currentEditingSupervisor = null
                 showDialog = true
             },
             modifier = Modifier
@@ -186,9 +185,8 @@ fun ChiefSupervisorScreen(
 
     if (showDialog) {
         AddChiefSupervisorDialog(
-            allFactories = listOf("Mumbai Plant", "Pune Plant", "Delhi Plant"),
+            viewModel = viewModel,
             initialData = currentEditingSupervisor?.let { supervisor ->
-                // Map AddChiefSupervisorResponse -> PlantHead-like object for dialog
                 PlantHead(
                     name = supervisor.username,
                     email = supervisor.email,
@@ -197,15 +195,7 @@ fun ChiefSupervisorScreen(
                     photoUri = supervisor.photo?.let { Uri.parse(it) }
                 )
             },
-            onDismiss = { showDialog = false },
-            onAdd = { name, email, designation, factory, photoUri ->
-                if (currentEditingSupervisor != null) {
-                    // TODO: Call ViewModel update function
-                } else {
-                    // TODO: Call ViewModel add function
-                }
-                showDialog = false
-            }
+            onDismiss = { showDialog = false }
         )
     }
 }
@@ -213,11 +203,13 @@ fun ChiefSupervisorScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddChiefSupervisorDialog(
-    allFactories: List<String>,
+    viewModel: ManageFactoryViewModel,
     onDismiss: () -> Unit,
-    onAdd: (name: String, email: String, designation: String, factory: String, photoUri: Uri?) -> Unit,
     initialData: PlantHead? = null
 ) {
+    val factories by viewModel.supervisorFactories.collectAsState()
+// API-fetched factories
+
     var name by remember { mutableStateOf(TextFieldValue(initialData?.name ?: "")) }
     var email by remember { mutableStateOf(TextFieldValue(initialData?.email ?: "")) }
     var designation by remember { mutableStateOf(initialData?.designation ?: "Chief-Supervisor") }
@@ -225,8 +217,8 @@ fun AddChiefSupervisorDialog(
     var selectedFactory by remember { mutableStateOf(initialData?.factory ?: "") }
     var factoryExpanded by remember { mutableStateOf(false) }
     var photoUri by remember { mutableStateOf(initialData?.photoUri) }
+    var isLoading by remember { mutableStateOf(false) }
 
-    val designations = listOf("Chief-Supervisor")
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
         onResult = { uri -> photoUri = uri }
@@ -286,7 +278,7 @@ fun AddChiefSupervisorDialog(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Designation Dropdown (fixed to Chief-Supervisor)
+                // Designation Dropdown (fixed)
                 ExposedDropdownMenuBox(
                     expanded = designationExpanded,
                     onExpandedChange = { designationExpanded = !designationExpanded }
@@ -303,15 +295,13 @@ fun AddChiefSupervisorDialog(
                         expanded = designationExpanded,
                         onDismissRequest = { designationExpanded = false }
                     ) {
-                        designations.forEach { option ->
-                            DropdownMenuItem(
-                                text = { Text(option) },
-                                onClick = {
-                                    designation = option
-                                    designationExpanded = false
-                                }
-                            )
-                        }
+                        DropdownMenuItem(
+                            text = { Text("Chief-Supervisor") },
+                            onClick = {
+                                designation = "Chief-Supervisor"
+                                designationExpanded = false
+                            }
+                        )
                     }
                 }
 
@@ -334,11 +324,11 @@ fun AddChiefSupervisorDialog(
                         expanded = factoryExpanded,
                         onDismissRequest = { factoryExpanded = false }
                     ) {
-                        allFactories.forEach { factory ->
+                        factories.forEach { factory ->
                             DropdownMenuItem(
-                                text = { Text(factory) },
+                                text = { Text(factory.name) },
                                 onClick = {
-                                    selectedFactory = factory
+                                    selectedFactory = factory.name
                                     factoryExpanded = false
                                 }
                             )
@@ -356,15 +346,29 @@ fun AddChiefSupervisorDialog(
                     TextButton(onClick = onDismiss) { Text("Cancel") }
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(
+                        enabled = !isLoading,
                         onClick = {
-                            if (name.text.isNotBlank() && email.text.isNotBlank() &&
-                                designation.isNotBlank() && selectedFactory.isNotBlank()
-                            ) {
-                                onAdd(name.text, email.text, designation, selectedFactory, photoUri)
+                            val factoryId =
+                                factories.firstOrNull { it.name == selectedFactory }?.id?.toLong()
+                                    ?: 0L
+
+                            if (name.text.isNotBlank() && email.text.isNotBlank() && factoryId != 0L) {
+                                isLoading = true
+                                viewModel.addChiefSupervisor(
+                                    name.text,
+                                    email.text,
+                                    factoryId, // pass as Long
+                                    photoUri
+                                ) { success, message ->
+                                    isLoading = false
+                                    if (success) onDismiss()
+                                    else println("Add Supervisor failed: $message")
+                                }
                             }
                         }
                     ) {
-                        Text(if (initialData != null) "Update" else "Add")
+                        if (isLoading) CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White)
+                        else Text("Add")
                     }
                 }
             }
@@ -373,6 +377,3 @@ fun AddChiefSupervisorDialog(
         containerColor = Color.White
     )
 }
-
-
-
