@@ -4,13 +4,16 @@ import com.example.partsphere.model.DistributorRegistrationResponse
 import com.example.partsphere.presentation.login_screen.model.LoginRequest
 import com.example.partsphere.presentation.login_screen.model.LoginResponse
 import com.example.partsphere.presentation.owner.model.AddCOResponse
+import com.example.partsphere.presentation.owner.model.ChiefSupervisorPaginatedResponse
 import com.example.partsphere.presentation.owner.model.CreateFactoryRequest
 import com.example.partsphere.presentation.owner.model.CreateFactoryResponse
 import com.example.partsphere.presentation.owner.model.DeleteFactoryResponse
+import com.example.partsphere.presentation.owner.model.DeletePlantHeadResponse
 import com.example.partsphere.presentation.owner.model.DeleteResponse
 import com.example.partsphere.presentation.owner.model.EmployeeCountResponse
 import com.example.partsphere.presentation.owner.model.FactoryLocationResponse
 import com.example.partsphere.presentation.owner.model.FactoryResponse
+import com.example.partsphere.presentation.owner.model.PaginatedCOResponse
 import com.example.partsphere.presentation.owner.model.PlantHeadResponse
 import com.example.partsphere.presentation.owner.model.UnassignedPlantHead
 import com.example.partsphere.presentation.owner.model.UpdateCentralOfficerRequest
@@ -60,6 +63,7 @@ interface DistributorApi {
     suspend fun getFactoryCountByLocation(): Response<FactoryLocationResponse>
 
     //GET all Factories
+    //GET all Factories
     @GET("/api/factory/all")
     suspend fun getAllFactories(
         @Query("page") page: Int = 0,
@@ -107,7 +111,11 @@ interface DistributorApi {
 
 
     @GET("/api/users/role/central-officer")
-    suspend fun getAllCentralOfficers(): Response<List<AddCOResponse>>
+    suspend fun getAllCentralOfficers(
+        @Query("page") page: Int,
+        @Query("size") size: Int
+    ): Response<PaginatedCOResponse>
+
 
 
     @DELETE("api/users/delete/{id}")
@@ -133,5 +141,18 @@ interface DistributorApi {
 
         @GET("api/users/role/plant-head")
         suspend fun getPlantHeads(): Response<List<PlantHeadResponse>>
+
+    @DELETE("api/users/delete/{id}")
+    suspend fun deleteEmployee(@Path("id") id: Int): Response<DeletePlantHeadResponse>
+
+
+    //Get All ChiefSupervisor
+
+    @GET("/api/users/role/chief-supervisor")
+    suspend fun getAllChiefSupervisors(
+        @Query("page") page: Int,
+        @Query("size") size: Int
+    ): Response<ChiefSupervisorPaginatedResponse>
+
 
 }

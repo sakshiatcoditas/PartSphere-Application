@@ -6,10 +6,10 @@ import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.partsphere.presentation.owner.model.AddChiefSupervisorResponse
 import com.example.partsphere.presentation.owner.model.CentralOfficerUiState
 import com.example.partsphere.presentation.owner.model.FactoryItem
 import com.example.partsphere.presentation.owner.model.PlantHeadResponse
@@ -193,29 +193,42 @@ class ManageFactoryViewModel @Inject constructor(
         }
     }
 
-    fun fetchCentralOfficers() {
+    fun fetchCentralOfficers(loadMore: Boolean = false) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-            val result = repository.getAllCentralOfficers()
+            if (!loadMore) {
+                _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            }
+
+            val result = repository.getAllCentralOfficers(loadAll = !loadMore)
 
             result.onSuccess { coList ->
-                coList.forEach {
-                    println(" Officer photo URL: ${it.photo}")
+                if (coList.isNotEmpty()) {
+                    val officers = coList.map { response ->
+                        CentralOfficer(
+                            id = response.id,
+                            name = response.username,
+                            email = response.email,
+                            photoUrl = response.photo?.replace("http://", "https://")
+                        )
+                    }
+
+                    val updatedList = if (loadMore)
+                        _uiState.value.officers + officers.distinctBy { it.id }
+                    else
+                        officers.distinctBy { it.id }
+
+                    _uiState.value = _uiState.value.copy(isLoading = false, officers = updatedList)
+                } else {
+                    _uiState.value = _uiState.value.copy(isLoading = false)
                 }
-                val officers = coList.map { response ->
-                    CentralOfficer(
-                        id = response.id,
-                        name = response.username,
-                        email = response.email,
-                        photoUrl = response.photo?.replace("http://", "https://")
-                    )
-                }
-                _uiState.value = _uiState.value.copy(isLoading = false, officers = officers)
             }.onFailure { e ->
                 _uiState.value = _uiState.value.copy(isLoading = false, error = e.message)
             }
         }
     }
+
+
+
 
 
     private val _wasDeleted = MutableStateFlow(false)
@@ -241,7 +254,7 @@ class ManageFactoryViewModel @Inject constructor(
     }
 
     fun updateCentralOfficer(
-        context: Context,  // add context here
+        context: Context, // add context here
         officerId: Int,
         username: String,
         email: String,
@@ -249,21 +262,35 @@ class ManageFactoryViewModel @Inject constructor(
         onResult: (Boolean) -> Unit
     ) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, error = null) }
+            _uiState.update {
+                it.copy(isLoading = true, error = null)
+            }
 
-            val result = repository.updateCentralOfficer(context, officerId, username, email, photoUri)
+            val result = repository.updateCentralOfficer(
+                context = context,
+                officerId = officerId,
+                username = username,
+                email = email,
+                photoUri = photoUri
+            )
 
             if (result.isSuccess) {
                 fetchCentralOfficers() // refresh list after update
                 onResult(true)
             } else {
-                _uiState.update { it.copy(error = result.exceptionOrNull()?.message) }
+                _uiState.update {
+                    it.copy(error = result.exceptionOrNull()?.message)
+                }
                 onResult(false)
             }
 
-            _uiState.update { it.copy(isLoading = false) }
+            _uiState.update {
+                it.copy(isLoading = false)
+            }
         }
     }
+
+
 
 
 
@@ -294,8 +321,71 @@ class ManageFactoryViewModel @Inject constructor(
     }
 
 
+//    fun deletePlantHead(plantHeadId: Int, onResult: (Boolean, String) -> Unit) {
+//        viewModelScope.launch {
+//            loading = true
+//            try {
+//                val result = repository.deletePlantHead(plantHeadId)
+//                result.onSuccess { message ->
+//                    // Remove deleted PlantHead from list
+//                    plantHeads = plantHeads.filterNot { it.id == plantHeadId }
+//                    onResult(true, message)
+//                }.onFailure { e ->
+//                    onResult(false, e.message ?: "Failed to delete Plant Head")
+//                }
+//            } finally {
+//                loading = false
+//            }
+//        }
+//    }
+
+
+
+//  Chief Supervisor Pagination Handling
+
+
+    data class ChiefSupervisorUiState(
+        val isLoading: Boolean = false,
+        val error: String? = null,
+        val supervisors: List<AddChiefSupervisorResponse> = emptyList()
+    )
+
+    private val _chiefUiState = MutableStateFlow(ChiefSupervisorUiState())
+    val chiefUiState: StateFlow<ChiefSupervisorUiState> = _chiefUiState
+
+    fun fetchChiefSupervisors(loadMore: Boolean = false) {
+        viewModelScope.launch {
+            if (!loadMore) {
+                _chiefUiState.value = _chiefUiState.value.copy(isLoading = true, error = null)
+            }
+
+            val result = repository.getAllChiefSupervisors(loadAll = !loadMore)
+
+            result.onSuccess { newList ->
+                if (newList.isNotEmpty()) {
+                    val updatedList = if (loadMore)
+                        _chiefUiState.value.supervisors + newList.distinctBy { it.id }
+                    else
+                        newList.distinctBy { it.id }
+
+                    _chiefUiState.value = _chiefUiState.value.copy(
+                        isLoading = false,
+                        supervisors = updatedList
+                    )
+                } else {
+                    _chiefUiState.value = _chiefUiState.value.copy(isLoading = false)
+                }
+            }.onFailure { e ->
+                _chiefUiState.value = _chiefUiState.value.copy(
+                    isLoading = false,
+                    error = e.message
+                )
+            }
+        }
+    }
+
+
 
 
 }
-
 

@@ -16,6 +16,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -37,6 +38,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import com.example.partsphere.presentation.owner.ui.components.SearchBar
 import com.example.partsphere.presentation.owner.viewmodel.ManageFactoryViewModel
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 
 // --- Data model ---
 data class CentralOfficer(
@@ -59,15 +63,31 @@ fun CentralOfficerScreen(
     var showDialog by remember { mutableStateOf(false) }
     var officerToEdit by remember { mutableStateOf<CentralOfficer?>(null) }
 
-    //  Fetch officers when the screen opens
+    // --- Pagination state ---
+    val listState = rememberLazyListState()
+
+    // --- Fetch officers when the screen opens ---
     LaunchedEffect(Unit) {
         viewModel.fetchCentralOfficers()
     }
 
-    //  Search state
+    // --- Pagination trigger: when scrolled to bottom ---
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
+            .map { it ?: 0 }
+            .distinctUntilChanged()
+            .collectLatest { lastVisibleIndex ->
+                val totalItems = uiState.officers.size
+                if (lastVisibleIndex >= totalItems - 1 && !uiState.isLoading) {
+                    viewModel.fetchCentralOfficers(loadMore = true)
+                }
+            }
+    }
+
+    // --- Search state ---
     var searchQuery by remember { mutableStateOf("") }
 
-    //  Filter officers by search query
+    // --- Filter officers by search query ---
     val filteredOfficers = uiState.officers.filter {
         it.name.contains(searchQuery, ignoreCase = true) ||
                 it.email.contains(searchQuery, ignoreCase = true)
@@ -104,14 +124,13 @@ fun CentralOfficerScreen(
         }
     ) { innerPadding ->
 
-        //  Use the Scaffold’s padding directly
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .background(Color.White)
         ) {
-            //  Search Bar (fixed top)
+            // --- Search Bar ---
             SearchBar(
                 query = searchQuery,
                 onQueryChange = { searchQuery = it },
@@ -122,14 +141,14 @@ fun CentralOfficerScreen(
             )
 
             LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize(),
+                state = listState, // Pagination tracking here
+                modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 contentPadding = PaddingValues(
                     start = 16.dp,
                     end = 16.dp,
                     top = 8.dp,
-                    bottom = 100.dp //  ensures list can scroll behind FAB & bottom nav
+                    bottom = 100.dp
                 )
             ) {
                 if (filteredOfficers.isEmpty()) {
@@ -152,50 +171,58 @@ fun CentralOfficerScreen(
                         )
                     }
 
+                    // --- Show bottom loader when loading next page ---
+                    if (uiState.isLoading && uiState.officers.isNotEmpty()) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(color = Color.Black)
+                            }
+                        }
+                    }
                 }
             }
         }
 
-
-        //  loading overlay
-        if (uiState.isLoading) {
+        // --- Loading overlay for first page ---
+        if (uiState.isLoading && uiState.officers.isEmpty()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
         }
 
-        // Error toast
+        // --- Error toast ---
         uiState.error?.let { error ->
             LaunchedEffect(error) {
                 Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
             }
         }
 
-        // Dialog
+        // --- Add/Edit dialog ---
         if (showDialog) {
             AddCentralOfficerDialog(
                 onDismiss = { showDialog = false },
-                onAdd = { name, email, photoUri, _ ->   // 4th param ignored for new add
+                onAdd = { name, email, photoUri, _ ->
                     viewModel.addCentralOfficer(name, email, photoUri)
                     showDialog = false
                 },
                 initialData = officerToEdit
             )
         }
-
     }
 
-    // loading overlay
-    if (uiState.isLoading) {
+    // --- Global overlay if needed ---
+    if (uiState.isLoading && uiState.officers.isEmpty()) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
         }
     }
-
-
-
-
 }
+
 
 
 
@@ -328,8 +355,11 @@ fun CentralOfficerCard(
                     photoUri = photoUri
                 ) { success ->
                     if (success) {
-                        Toast.makeText(context, "Edited successfully ", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Edited successfully", Toast.LENGTH_SHORT).show()
                         showEditDialog = false
+
+                        //  Refresh list to reflect latest data
+                        viewModel.fetchCentralOfficers()
                     } else {
                         Toast.makeText(context, "Edit failed. Please try again.", Toast.LENGTH_SHORT).show()
                     }
@@ -338,6 +368,7 @@ fun CentralOfficerCard(
             initialData = officer
         )
     }
+
 
 }
 

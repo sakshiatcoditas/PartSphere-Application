@@ -20,9 +20,9 @@ class MainActivity : ComponentActivity() {
             PartSphereTheme {
 
 
-             //   val navController = rememberNavController()
+             // val navController = rememberNavController()
                 //RegistrationNavGraph(navController = navController)
-             //LoginNavGraph(navController = navController)
+           //  LoginNavGraph(navController = navController)
                 OwnerDashboardScreen()
             }
         }

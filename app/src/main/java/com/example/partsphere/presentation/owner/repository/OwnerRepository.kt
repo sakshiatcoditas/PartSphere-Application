@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import com.example.partsphere.network.DistributorApi
 import com.example.partsphere.presentation.owner.model.AddCOResponse
+import com.example.partsphere.presentation.owner.model.AddChiefSupervisorResponse
 import com.example.partsphere.presentation.owner.model.CreateFactoryRequest
 import com.example.partsphere.presentation.owner.model.CreateFactoryResponse
 import com.example.partsphere.presentation.owner.model.EmployeeCount
@@ -150,18 +151,56 @@ class OwnerRepository @Inject constructor(
 
 
 
-    suspend fun getAllCentralOfficers(): Result<List<AddCOResponse>> = withContext(Dispatchers.IO) {
+    private var currentPage = 0
+    private val pageSize = 3
+    private var isLastPage = false
+
+    suspend fun getAllCentralOfficers(loadAll: Boolean = false): Result<List<AddCOResponse>> = withContext(Dispatchers.IO) {
         try {
-            val response = api.getAllCentralOfficers()
-            if (response.isSuccessful && response.body() != null) {
-                Result.success(response.body()!!)
-            } else {
-                Result.failure(Exception(response.errorBody()?.string() ?: "Unknown error"))
+            // When we want all data (initial load), reset pagination
+            if (loadAll) {
+                currentPage = 0
+                isLastPage = false
             }
+
+            val allOfficers = mutableListOf<AddCOResponse>()
+
+            // Load all pages only once during app start
+            if (loadAll) {
+                do {
+                    val response = api.getAllCentralOfficers(currentPage, pageSize)
+                    if (response.isSuccessful && response.body() != null) {
+                        val paginatedResponse = response.body()!!
+                        allOfficers.addAll(paginatedResponse.content)
+                        currentPage = paginatedResponse.number + 1
+                        isLastPage = paginatedResponse.last
+                    } else {
+                        return@withContext Result.failure(Exception(response.errorBody()?.string() ?: "Unknown error"))
+                    }
+                } while (!isLastPage)
+            }
+            // Load only next page during pagination
+            else {
+                if (isLastPage) return@withContext Result.success(emptyList())
+
+                val response = api.getAllCentralOfficers(currentPage, pageSize)
+                if (response.isSuccessful && response.body() != null) {
+                    val paginatedResponse = response.body()!!
+                    currentPage = paginatedResponse.number + 1
+                    isLastPage = paginatedResponse.last
+                    allOfficers.addAll(paginatedResponse.content)
+                } else {
+                    return@withContext Result.failure(Exception(response.errorBody()?.string() ?: "Unknown error"))
+                }
+            }
+
+            Result.success(allOfficers)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
+
+
 
 
     suspend fun deleteCentralOfficer(id: Int): Result<String> {
@@ -216,18 +255,88 @@ class OwnerRepository @Inject constructor(
 
 
 
-        suspend fun getPlantHeads(): List<PlantHeadResponse>? {
-            val response = api.getPlantHeads()
-            return if (response.isSuccessful) response.body() else null
+    suspend fun getPlantHeads(): List<PlantHeadResponse>? {
+        val response = api.getPlantHeads()
+        return if (response.isSuccessful) response.body() else null
+    }
+
+
+//    suspend fun deletePlantHead(id: Int): Result<String> {
+//        return try {
+//            val response = api.deleteEmployee(id) // Your Retrofit DELETE API
+//            if (response.isSuccessful && response.body() != null) {
+//                Result.success(response.body()!!.message)
+//            } else {
+//                val errorMsg = response.errorBody()?.string() ?: "Failed to delete Plant Head"
+//                Result.failure(Exception(errorMsg))
+//            }
+//        } catch (e: Exception) {
+//            Result.failure(e)
+//        }
+//    }
+
+
+
+//  Chief Supervisor Pagination
+//
+
+    private var currentChiefPage = 0
+    private val chiefPageSize = 3
+    private var isLastChiefPage = false
+
+    suspend fun getAllChiefSupervisors(loadAll: Boolean = false): Result<List<AddChiefSupervisorResponse>> =
+        withContext(Dispatchers.IO) {
+            try {
+                if (loadAll) {
+                    currentChiefPage = 0
+                    isLastChiefPage = false
+                }
+
+                val allChiefs = mutableListOf<AddChiefSupervisorResponse>()
+
+                // Load all pages on app start
+                if (loadAll) {
+                    do {
+                        val response = api.getAllChiefSupervisors(currentChiefPage, chiefPageSize)
+                        if (response.isSuccessful && response.body() != null) {
+                            val paginatedResponse = response.body()!!
+                            allChiefs.addAll(paginatedResponse.content)
+                            currentChiefPage = paginatedResponse.number + 1
+                            isLastChiefPage = paginatedResponse.last
+                        } else {
+                            return@withContext Result.failure(
+                                Exception(response.errorBody()?.string() ?: "Unknown error")
+                            )
+                        }
+                    } while (!isLastChiefPage)
+                } else {
+                    // Only next page for pagination
+                    if (isLastChiefPage) return@withContext Result.success(emptyList())
+
+                    val response = api.getAllChiefSupervisors(currentChiefPage, chiefPageSize)
+                    if (response.isSuccessful && response.body() != null) {
+                        val paginatedResponse = response.body()!!
+                        currentChiefPage = paginatedResponse.number + 1
+                        isLastChiefPage = paginatedResponse.last
+                        allChiefs.addAll(paginatedResponse.content)
+                    } else {
+                        return@withContext Result.failure(
+                            Exception(response.errorBody()?.string() ?: "Unknown error")
+                        )
+                    }
+                }
+
+                Result.success(allChiefs)
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
         }
 
 
 
 
 
-
 }
-
 
 
 
