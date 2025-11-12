@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.partsphere.presentation.owner.ui.AddProductScreen
 import com.example.partsphere.presentation.owner.ui.manageemployee.ManageEmployeeScreen
 import com.example.partsphere.presentation.owner.ui.ManageFactoryScreen
 import com.example.partsphere.presentation.owner.ui.manageemployee.CentralOfficerScreen
@@ -29,6 +30,7 @@ fun OwnerNavGraph(navController: NavHostController) {
         }
 
         composable(OwnerBottomNavItem.ManageFactory.route) { ManageFactoryScreen() }
+
         composable(OwnerBottomNavItem.Profile.route) { ProfileScreen() }
 
         // Central Officers screen
@@ -51,6 +53,11 @@ fun OwnerNavGraph(navController: NavHostController) {
             ChiefSupervisorScreen(
                 onBackClick = { navController.popBackStack() }
 
+            )
+        }
+
+        composable(OwnerBottomNavItem.AddProduct.route) {
+            AddProductScreen(
             )
         }
     }

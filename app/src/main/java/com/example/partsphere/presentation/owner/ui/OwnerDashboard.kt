@@ -45,7 +45,7 @@ fun OwnerDashboardScreen() {
         OwnerBottomNavItem.Reports,
         OwnerBottomNavItem.ManageEmployee,
         OwnerBottomNavItem.ManageFactory,
-
+        OwnerBottomNavItem.AddProduct,
         OwnerBottomNavItem.Profile
     )
 

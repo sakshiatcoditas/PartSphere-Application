@@ -179,12 +179,6 @@ fun ComparisonBarChartCard(
     }
 }
 
-
-
-
-
-
-
 fun formatNumber(value: Float): String {
     return when {
         value >= 1_000_000 -> String.format("%.1fM", value / 1_000_000)

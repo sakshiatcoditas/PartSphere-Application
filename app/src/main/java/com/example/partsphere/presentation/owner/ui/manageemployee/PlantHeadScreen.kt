@@ -6,6 +6,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -23,6 +24,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
@@ -35,6 +37,7 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.partsphere.presentation.owner.ui.components.SearchBar
 import com.example.partsphere.presentation.owner.viewmodel.ManageFactoryViewModel
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.partsphere.ui.theme.Black
 
 // ---------------- DATA CLASS ----------------
 data class PlantHead(
@@ -459,6 +462,146 @@ fun PlantHeadCard(
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) { Text("Cancel") }
+            }
+        )
+    }
+}
+data class ProductCardData(
+    val name: String,
+    val category: String,
+    val quantity: String,
+    val price: String,
+    val description: String,
+    val photoUri: String? = null
+)
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ProductCard(
+    product: ProductCardData,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
+) {
+    var isPressed by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    val scale by animateFloatAsState(if (isPressed) 0.96f else 1f, tween(100))
+    val overlayColor by animateColorAsState(
+        if (isPressed) Color(0x33000000) else Color.Transparent,
+        tween(150)
+    )
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .graphicsLayer { scaleX = scale; scaleY = scale }
+            .background(overlayColor)
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onPress = {
+                        isPressed = true
+                        tryAwaitRelease()
+                        isPressed = false
+                    }
+                )
+            },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF9F9F9))
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                // Product image
+                Box(
+                    modifier = Modifier
+                        .size(70.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFE0E0E0)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (product.photoUri != null) {
+                        Image(
+                            painter = rememberAsyncImagePainter(product.photoUri),
+                            contentDescription = "Product Image",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        Text("No Image", fontSize = 10.sp, color = Color.DarkGray)
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        product.name,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        color = Black
+                    )
+                    Text("Category: ${product.category}", fontSize = 14.sp, color = Color.Gray)
+                    Text("Quantity: ${product.quantity}", fontSize = 14.sp, color = Color.Gray)
+                    Text("Price: ₹${product.price}", fontSize = 14.sp, color = Color.Gray)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Description
+            Text(
+                text = "Description: ${product.description}",
+                fontSize = 14.sp,
+                color = Color(0xFF555555),
+                lineHeight = 18.sp
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Action buttons (Edit/Delete)
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                OutlinedButton(
+                    onClick = onEdit,
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Black),
+                    border = BorderStroke(1.dp, Black)
+                ) {
+                    Text("Edit")
+                }
+
+                OutlinedButton(
+                    onClick = { showDeleteDialog = true },
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Red),
+                    border = BorderStroke(1.dp, Color.Red)
+                ) {
+                    Text("Delete")
+                }
+
+            }
+        }
+    }
+
+    // Delete confirmation dialog
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Delete Product") },
+            text = { Text("Are you sure you want to delete ${product.name}?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    onDelete()
+                    showDeleteDialog = false
+                }) {
+                    Text("Delete", color = Color.Red)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancel", color = Black)
+                }
             }
         )
     }
