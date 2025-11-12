@@ -1,12 +1,17 @@
 package com.example.partsphere.presentation.owner.ui
 
+import android.R.attr.scaleX
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -21,6 +26,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -28,8 +35,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.example.partsphere.presentation.owner.ui.components.SearchBar
+import com.example.partsphere.presentation.owner.ui.manageemployee.ProductCard
 import com.example.partsphere.ui.theme.Black
 import com.example.partsphere.ui.theme.White
+
+
+data class Product(
+    val id: Int,
+    val name: String,
+    val category: String,
+    val price: String,
+    val description: String,
+    val imageUrl: String? = null
+)
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,8 +58,30 @@ fun AddProductScreen() {
     var showFilterDialog by remember { mutableStateOf(false) }
     var selectedFilters by remember { mutableStateOf(setOf<String>()) }
 
-    val productList = listOf("Product A", "Product B", "Product C")
+    // Full product list
+    val fullProductList = listOf(
+        Product(1, "Product A", "Electronics", "999", "Smart gadget for daily use", null),
+        Product(2, "Product B", "Furniture", "2999", "Comfortable chair with modern design", null),
+        Product(3, "Product C", "Sports", "499", "High-quality sports equipment", null),
+        Product(4, "Product D", "Clothing", "899", "Stylish shirt for casual wear", null),
+        Product(5, "Product E", "Electronics", "1599", "Wireless earphones", null)
+    )
 
+    // ✅ Derived State: filters + search combined automatically
+    val filteredList by remember(searchText, selectedFilters) {
+        derivedStateOf {
+            fullProductList.filter { product ->
+                // Match search text
+                product.name.contains(searchText, ignoreCase = true) ||
+                        product.description.contains(searchText, ignoreCase = true)
+            }.filter { product ->
+                // Match selected category filters
+                selectedFilters.isEmpty() || product.category in selectedFilters
+            }
+        }
+    }
+
+    // --- UI below remains same ---
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -60,14 +101,14 @@ fun AddProductScreen() {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 🔹 Search Bar + Filter Button Row
+            // 🔹 Search Bar + Filter
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 SearchBar(
                     query = searchText,
-                    onQueryChange = { searchText = it },
+                    onQueryChange = { query -> searchText = query },
                     placeholderText = "Search products",
                     modifier = Modifier
                         .weight(1f)
@@ -83,31 +124,29 @@ fun AddProductScreen() {
                     Icon(
                         painter = painterResource(id = R.drawable.filter),
                         contentDescription = "Filter",
-                        tint = Black // you can remove tint if your vector already has color
+                        tint = Black
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                items(productList) { product ->
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F8F8))
-                    ) {
-                        Text(
-                            text = product,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp,
-                            modifier = Modifier.padding(16.dp)
-                        )
-                    }
+            // 🔹 Product List (real-time filtered)
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(bottom = 80.dp)
+            ) {
+                items(filteredList) { product ->
+                    ProductCard(
+                        product = product,
+                        onEdit = { /* handle edit */ },
+                        onDelete = { /* handle delete */ }
+                    )
                 }
             }
         }
 
+        // Add Button
         FloatingActionButton(
             onClick = { showAddProductDialog = true },
             modifier = Modifier
@@ -119,12 +158,12 @@ fun AddProductScreen() {
         }
     }
 
-    // 🔹 ADD PRODUCT DIALOG
+    // Add Product Dialog
     if (showAddProductDialog) {
         AddProductDialog(onDismiss = { showAddProductDialog = false })
     }
 
-    // 🔹 FILTER DIALOG
+    // Filter Dialog
     if (showFilterDialog) {
         FilterDialog(
             selectedFilters = selectedFilters,
@@ -132,10 +171,16 @@ fun AddProductScreen() {
                 selectedFilters = filters
                 showFilterDialog = false
             },
+            onClear = {
+                selectedFilters = emptySet()
+                showFilterDialog = false
+            },
             onDismiss = { showFilterDialog = false }
         )
     }
 }
+
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -289,13 +334,13 @@ fun AddProductDialog(onDismiss: () -> Unit) {
     )
 }
 
-// 🔹 Reusable function for consistent field color style
+//  Reusable function for consistent field color style
 @Composable
 fun outlinedFieldColors() = OutlinedTextFieldDefaults.colors(
     focusedBorderColor = Black,
-    unfocusedBorderColor = Color.LightGray,
+    unfocusedBorderColor = Black,
     focusedLabelColor = Black,
-    unfocusedLabelColor = Color.LightGray,
+    unfocusedLabelColor = Black,
     cursorColor = Black,
     focusedContainerColor = White,
     unfocusedContainerColor = White
@@ -306,6 +351,7 @@ fun outlinedFieldColors() = OutlinedTextFieldDefaults.colors(
 fun FilterDialog(
     selectedFilters: Set<String>,
     onApply: (Set<String>) -> Unit,
+    onClear: () -> Unit,
     onDismiss: () -> Unit
 ) {
     val allFilters = listOf("Electronics", "Furniture", "Clothing", "Sports")
@@ -314,11 +360,26 @@ fun FilterDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text(
-                text = "Filter by Category",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Filter by Category",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                IconButton(onClick = onDismiss) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.close),
+                        contentDescription = "Close",
+                        tint = Color.Gray,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
+            }
         },
         text = {
             Column {
@@ -353,16 +414,26 @@ fun FilterDialog(
             }
         },
         confirmButton = {
-            Button(
-                onClick = { onApply(selected) },
-                colors = ButtonDefaults.buttonColors(containerColor = Black)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Apply", color = White)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel", color = Black)
+                //  Clear Filters Button (always visible)
+                TextButton(onClick = {
+                    selected.clear()
+                    onClear()
+                }) {
+                    Text("Clear Filters", color = Color.Black)
+                }
+
+                //  Apply Button
+                Button(
+                    onClick = { onApply(selected) },
+                    colors = ButtonDefaults.buttonColors(containerColor = Black)
+                ) {
+                    Text("Apply", color = White)
+                }
             }
         },
         containerColor = White,
@@ -371,3 +442,141 @@ fun FilterDialog(
     )
 }
 
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ProductCard(
+    product: Product,
+    onEdit: (Product) -> Unit,
+    onDelete: (Product) -> Unit
+) {
+    var isPressed by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    val scale by animateFloatAsState(if (isPressed) 0.96f else 1f, tween(100))
+    val overlayColor by animateColorAsState(if (isPressed) Color(0x22000000) else Color.Transparent, tween(150))
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .graphicsLayer { scaleX = scale; scaleY = scale }
+            .background(overlayColor)
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onPress = {
+                        isPressed = true
+                        tryAwaitRelease()
+                        isPressed = false
+                    }
+                )
+            },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+
+            // Top Row: Image + Info
+            Row(verticalAlignment = Alignment.CenterVertically) {
+
+                Box(
+                    modifier = Modifier
+                        .size(70.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFF2F2F2)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (product.imageUrl != null) {
+                        Image(
+                            painter = rememberAsyncImagePainter(product.imageUrl),
+                            contentDescription = product.name,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Text("No Image", color = Color.DarkGray, fontSize = 12.sp)
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = product.name,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        color = Black
+                    )
+                    Text(
+                        text = product.category,
+                        fontSize = 14.sp,
+                        color = Color.Gray
+                    )
+                    Text(
+                        text = "₹${product.price}",
+                        fontSize = 15.sp,
+                        color = Color(0xFF00897B),
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Short description
+            Text(
+                text = product.description,
+                fontSize = 14.sp,
+                color = Color.DarkGray,
+                maxLines = 2
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Buttons Row
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                OutlinedButton(
+                    onClick = { onEdit(product) },
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Black)
+                ) {
+                    Text("Edit")
+                }
+
+                OutlinedButton(
+                    onClick = { showDeleteDialog = true },
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Black)
+                ) {
+                    Text("Delete")
+                }
+            }
+        }
+    }
+
+    // Delete confirmation dialog
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Delete Product") },
+            text = { Text("Are you sure you want to delete this product? This action cannot be undone.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onDelete(product)
+                        showDeleteDialog = false
+                    }
+                ) { Text("Delete", color = Color.Red) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancel", color = Color.Gray)
+                }
+            }
+        )
+    }
+}
