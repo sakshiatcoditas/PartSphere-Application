@@ -32,13 +32,13 @@ import com.example.partsphere.presentation.owner.ui.components.SearchBar
 import com.example.partsphere.presentation.owner.viewmodel.ManageFactoryViewModel
 
 // ---------------- DATA CLASS ----------------
-data class ChiefSupervisor(
-    val name: String,
-    val email: String,
-    val designation: String,
-    val factory: String,
-    val photoUri: Uri? = null
-)
+//data class ChiefSupervisor(
+//    val name: String,
+//    val email: String,
+//    val designation: String,
+//    val factory: String,
+//    val photoUri: Uri? = null
+//)
 
 // ---------------- CHIEF SUPERVISOR SCREEN ----------------
 @OptIn(ExperimentalMaterial3Api::class)
@@ -349,15 +349,15 @@ fun AddChiefSupervisorDialog(
                         enabled = !isLoading,
                         onClick = {
                             val factoryId =
-                                factories.firstOrNull { it.name == selectedFactory }?.id?.toLong()
-                                    ?: 0L
+                                factories.firstOrNull { it.name == selectedFactory }?.id ?: 0L
 
                             if (name.text.isNotBlank() && email.text.isNotBlank() && factoryId != 0L) {
                                 isLoading = true
                                 viewModel.addChiefSupervisor(
                                     name.text,
                                     email.text,
-                                    factoryId, // pass as Long
+                                    factoryId,
+                                    selectedFactory, // pass the factory name here
                                     photoUri
                                 ) { success, message ->
                                     isLoading = false
@@ -365,6 +365,7 @@ fun AddChiefSupervisorDialog(
                                     else println("Add Supervisor failed: $message")
                                 }
                             }
+
                         }
                     ) {
                         if (isLoading) CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White)

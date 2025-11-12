@@ -229,12 +229,8 @@ class ManageFactoryViewModel @Inject constructor(
     }
 
 
-
-
-
     private val _wasDeleted = MutableStateFlow(false)
     val wasDeleted: StateFlow<Boolean> = _wasDeleted
-
 
 
     fun deleteCentralOfficer(officerId: Int) {
@@ -292,11 +288,6 @@ class ManageFactoryViewModel @Inject constructor(
     }
 
 
-
-
-
-
-
     var plantHeads by mutableStateOf<List<PlantHeadResponse>>(emptyList())
         private set
 
@@ -339,7 +330,6 @@ class ManageFactoryViewModel @Inject constructor(
 //            }
 //        }
 //    }
-
 
 
 //  Chief Supervisor Pagination Handling
@@ -408,15 +398,19 @@ class ManageFactoryViewModel @Inject constructor(
         name: String,
         email: String,
         factoryId: Long,
+        factoryName: String, // Add this parameter
         photoUri: Uri?,
         onResult: (Boolean, String) -> Unit
     ) {
         viewModelScope.launch {
             _isAddingSupervisor.value = true
             val result = repository.addChiefSupervisor(name, email, factoryId, photoUri)
+
             result.onSuccess { supervisor ->
+                // Inject factoryName into the supervisor object
+                val supervisorWithFactory = supervisor.copy(factoryName = factoryName)
                 _chiefUiState.update {
-                    it.copy(supervisors = it.supervisors + supervisor)
+                    it.copy(supervisors = it.supervisors + supervisorWithFactory)
                 }
                 onResult(true, "Supervisor added successfully")
             }.onFailure { e ->
