@@ -1,89 +1,94 @@
 package com.example.partsphere.presentation.owner.ui.manageemployee
 
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+
+data class EmployeeOption(
+    val title: String,
+    val onClick: () -> Unit
+)
 
 @Composable
 fun ManageEmployeeScreen(
     onCentralOfficerClick: () -> Unit,
     onPlantHeadClick: () -> Unit,
-    onChiefSupervisorClick: () -> Unit // New callback for Chief Supervisor
+    onChiefSupervisorClick: () -> Unit
 ) {
-    Column(
+    val options = listOf(
+        EmployeeOption("Add New Central Officer", onCentralOfficerClick),
+        EmployeeOption("Add New Plant Head", onPlantHeadClick),
+        EmployeeOption("Add New Chief Supervisor", onChiefSupervisorClick)
+    )
+
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(Color(0xFFF5F5F5)) // subtle gray background
             .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        contentAlignment = Alignment.TopCenter // center horizontally
     ) {
-        Text(
-            text = "Manage Employees",
-            color = Color.Black,
-            fontSize = 28.sp,
-            modifier = Modifier.padding(bottom = 32.dp)
-        )
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Screen Title
+            Text(
+                text = "Manage Employees",
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black,
+                modifier = Modifier.padding(bottom = 24.dp)
+            )
 
-        EmployeeCard(
-            title = "Add New Central Officer",
-            onClick = onCentralOfficerClick
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        EmployeeCard(
-            title = "Add New Plant Head",
-            onClick = onPlantHeadClick
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        EmployeeCard(
-            title = "Add New Chief Supervisor",
-            onClick = onChiefSupervisorClick
-        )
+            // Cards list
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally, // center items
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(options) { item ->
+                    EmployeeCard(title = item.title, onClick = item.onClick)
+                }
+            }
+        }
     }
 }
-
 
 @Composable
 fun EmployeeCard(title: String, onClick: () -> Unit) {
     Card(
         modifier = Modifier
-            .fillMaxWidth()
-            .height(100.dp)
+            .width(280.dp) // fixed width to keep cards centered
+            .height(120.dp)
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 20.dp)
     ) {
         Box(
             modifier = Modifier
-                .fillMaxSize()
-                .background(Color.White),
-            contentAlignment = Alignment.Center
+                .fillMaxSize(),
+            contentAlignment = Alignment.Center // center text both vertically and horizontally
         ) {
             Text(
                 text = title,
-                fontSize = 18.sp,
-                color = Color.Black
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Normal,
+                color = Color(0xFF333333),
+                maxLines = 2
             )
         }
     }
 }
-
-
-
-
-
-

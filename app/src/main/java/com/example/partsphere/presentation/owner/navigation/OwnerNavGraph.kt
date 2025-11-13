@@ -1,6 +1,7 @@
 package com.example.partsphere.presentation.owner.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -31,8 +32,11 @@ fun OwnerNavGraph(navController: NavHostController) {
 
         composable(OwnerBottomNavItem.ManageFactory.route) { ManageFactoryScreen() }
 
-        composable(OwnerBottomNavItem.Profile.route) { ProfileScreen() }
-
+        composable(OwnerBottomNavItem.Profile.route) {
+             val context = LocalContext.current
+            ProfileScreen(context = context)
+           // ProfileScreen(context = context)
+        }
         // Central Officers screen
         composable("central_officers") {
             CentralOfficerScreen(

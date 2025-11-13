@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.ui.res.painterResource
 
 
 import androidx.compose.ui.text.font.FontWeight
@@ -65,7 +66,8 @@ fun OwnerDashboardScreen() {
                 items.forEach { item ->
 
                     NavigationBarItem(
-                        icon = { Icon(item.icon, contentDescription = item.label, tint = Color.White) },
+                        icon = { Icon( painter = painterResource(id = item.iconRes),
+                             contentDescription = item.label, tint = Color.White) },
                         label = { Text(item.label, color = Color.White, fontSize = 10.sp) },
                         selected = currentRoute == item.route,
                         onClick = {

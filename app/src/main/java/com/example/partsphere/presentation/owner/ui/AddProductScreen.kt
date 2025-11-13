@@ -15,6 +15,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -33,55 +34,68 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
+import com.example.partsphere.presentation.owner.model.Product
 import com.example.partsphere.presentation.owner.ui.components.SearchBar
 import com.example.partsphere.presentation.owner.ui.manageemployee.ProductCard
+import com.example.partsphere.presentation.owner.viewmodel.ManageFactoryViewModel
 import com.example.partsphere.ui.theme.Black
 import com.example.partsphere.ui.theme.White
 
 
-data class Product(
-    val id: Int,
-    val name: String,
-    val category: String,
-    val price: String,
-    val description: String,
-    val imageUrl: String? = null
-)
+//data class Product(
+//    val id: Int,
+//    val name: String,
+//    val category: String,
+//    val price: String,
+//    val description: String,
+//    val imageUrl: String? = null
+//)
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddProductScreen() {
+fun AddProductScreen(
+    viewModel: ManageFactoryViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.productUiState.collectAsState()
+
+    // 🔹 Load first page
+    LaunchedEffect(Unit) {
+        viewModel.fetchProducts(page = 0)
+    }
+
     var searchText by remember { mutableStateOf("") }
     var showAddProductDialog by remember { mutableStateOf(false) }
     var showFilterDialog by remember { mutableStateOf(false) }
     var selectedFilters by remember { mutableStateOf(setOf<String>()) }
 
-    // Full product list
-    val fullProductList = listOf(
-        Product(1, "Product A", "Electronics", "999", "Smart gadget for daily use", null),
-        Product(2, "Product B", "Furniture", "2999", "Comfortable chair with modern design", null),
-        Product(3, "Product C", "Sports", "499", "High-quality sports equipment", null),
-        Product(4, "Product D", "Clothing", "899", "Stylish shirt for casual wear", null),
-        Product(5, "Product E", "Electronics", "1599", "Wireless earphones", null)
-    )
+    val listState = rememberLazyListState()
 
-    // ✅ Derived State: filters + search combined automatically
-    val filteredList by remember(searchText, selectedFilters) {
+    //  Detect end-of-list for pagination
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
+            .collect { lastVisibleItemIndex ->
+                val totalItems = uiState.products.size
+                if (lastVisibleItemIndex == totalItems - 1 && !uiState.isLoading && uiState.currentPage < uiState.totalPages - 1) {
+                    viewModel.fetchProducts(uiState.currentPage + 1)
+                }
+            }
+    }
+
+    //  Filtered and searched list (from API data)
+    val filteredList by remember(uiState.products, searchText, selectedFilters) {
         derivedStateOf {
-            fullProductList.filter { product ->
-                // Match search text
-                product.name.contains(searchText, ignoreCase = true) ||
-                        product.description.contains(searchText, ignoreCase = true)
-            }.filter { product ->
-                // Match selected category filters
-                selectedFilters.isEmpty() || product.category in selectedFilters
+            uiState.products.filter { product ->
+                (product.name.contains(searchText, ignoreCase = true) ||
+                        product.description.contains(searchText, ignoreCase = true))
+                        && (selectedFilters.isEmpty() || product.categoryName in selectedFilters)
             }
         }
     }
 
-    // --- UI below remains same ---
+    // --- UI ---
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -93,7 +107,7 @@ fun AddProductScreen() {
                 .padding(16.dp)
         ) {
             Text(
-                text = "Add New Product",
+                text = "All Products",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -101,14 +115,14 @@ fun AddProductScreen() {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 🔹 Search Bar + Filter
+            // 🔹 Search + Filter
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 SearchBar(
                     query = searchText,
-                    onQueryChange = { query -> searchText = query },
+                    onQueryChange = { searchText = it },
                     placeholderText = "Search products",
                     modifier = Modifier
                         .weight(1f)
@@ -119,7 +133,7 @@ fun AddProductScreen() {
                     onClick = { showFilterDialog = true },
                     modifier = Modifier
                         .size(48.dp)
-                        .background(Color(0xFFF2F2F2), shape = RoundedCornerShape(12.dp))
+                        .background(Color(0xFFF2F2F2), RoundedCornerShape(12.dp))
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.filter),
@@ -131,22 +145,44 @@ fun AddProductScreen() {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 🔹 Product List (real-time filtered)
+            // 🔹 Product list
             LazyColumn(
+                state = listState,
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = PaddingValues(bottom = 80.dp)
             ) {
                 items(filteredList) { product ->
                     ProductCard(
-                        product = product,
-                        onEdit = { /* handle edit */ },
-                        onDelete = { /* handle delete */ }
+                        product = Product(
+                            id = product.id,
+                            name = product.name,
+                            categoryName = product.categoryName,
+                            description = product.description,
+                            price = product.price,
+                            imageUrl = product.imageUrl
+                        ),
+                        onEdit = { /* TODO */ },
+                        onDelete = { /* TODO */ }
                     )
+                }
+
+                // 🔹 Show loading item at the end during pagination
+                if (uiState.isLoading) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = Black)
+                        }
+                    }
                 }
             }
         }
 
-        // Add Button
+        // 🔹 Floating Add button
         FloatingActionButton(
             onClick = { showAddProductDialog = true },
             modifier = Modifier
@@ -156,19 +192,44 @@ fun AddProductScreen() {
         ) {
             Icon(Icons.Default.Add, contentDescription = "Add Product", tint = White)
         }
+
+        // 🔹 Error message (if any)
+        uiState.error?.let { errorMsg ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0xAA000000)),
+                contentAlignment = Alignment.Center
+            ) {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text("Error: $errorMsg", color = Color.Red)
+                        Spacer(Modifier.height(8.dp))
+                        Button(onClick = { viewModel.fetchProducts(uiState.currentPage) }) {
+                            Text("Retry")
+                        }
+                    }
+                }
+            }
+        }
     }
 
-    // Add Product Dialog
+    //  Dialogs
     if (showAddProductDialog) {
         AddProductDialog(onDismiss = { showAddProductDialog = false })
     }
 
-    // Filter Dialog
     if (showFilterDialog) {
         FilterDialog(
             selectedFilters = selectedFilters,
-            onApply = { filters ->
-                selectedFilters = filters
+            onApply = {
+                selectedFilters = it
                 showFilterDialog = false
             },
             onClear = {
@@ -179,6 +240,7 @@ fun AddProductScreen() {
         )
     }
 }
+
 
 
 
@@ -509,7 +571,7 @@ fun ProductCard(
                         color = Black
                     )
                     Text(
-                        text = product.category,
+                        text = product.categoryName,
                         fontSize = 14.sp,
                         color = Color.Gray
                     )

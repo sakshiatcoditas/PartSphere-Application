@@ -13,6 +13,7 @@ import com.example.partsphere.presentation.owner.model.AddChiefSupervisorRespons
 import com.example.partsphere.presentation.owner.model.CentralOfficerUiState
 import com.example.partsphere.presentation.owner.model.FactoryItem
 import com.example.partsphere.presentation.owner.model.PlantHeadResponse
+import com.example.partsphere.presentation.owner.model.ProductUiState
 import com.example.partsphere.presentation.owner.model.SupervisorFactory
 import com.example.partsphere.presentation.owner.model.UnassignedPlantHead
 import com.example.partsphere.presentation.owner.model.UpdateFactoryRequest
@@ -419,7 +420,50 @@ class ManageFactoryViewModel @Inject constructor(
             _isAddingSupervisor.value = false
         }
     }
+
+
+    private val _productUiState = MutableStateFlow(ProductUiState())
+    val productUiState: StateFlow<ProductUiState> = _productUiState
+
+    fun fetchProducts(page: Int = 0, size: Int = 5, isNextPage: Boolean = false) {
+        viewModelScope.launch {
+            _productUiState.update { it.copy(isLoading = true, error = null) }
+
+            val result = repository.getAllProducts(page, size)
+            result.onSuccess { response ->
+                _productUiState.update {
+                    it.copy(
+                        products = if (isNextPage) it.products + response.content else response.content,
+                        currentPage = response.number,
+                        totalPages = response.totalPages,
+                        isLoading = false,
+                        error = null
+                    )
+                }
+            }.onFailure { e ->
+                _productUiState.update {
+                    it.copy(isLoading = false, error = e.message ?: "Failed to load products")
+                }
+            }
+        }
+    }
+
+    fun loadNextPage() {
+        val state = _productUiState.value
+        if (!state.isLoading && state.currentPage + 1 < state.totalPages) {
+            fetchProducts(page = state.currentPage + 1, isNextPage = true)
+        }
+    }
+
+
+
 }
+
+
+
+
+
+
 
 
 

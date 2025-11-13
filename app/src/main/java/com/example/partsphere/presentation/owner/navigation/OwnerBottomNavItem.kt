@@ -1,22 +1,37 @@
 package com.example.partsphere.presentation.owner.navigation
 
+import androidx.annotation.DrawableRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.ui.graphics.vector.ImageVector
+import com.example.partsphere.R
 
 sealed class OwnerBottomNavItem(
     val route: String,
-    val icon: ImageVector,
+    //val icon: ImageVector,
+    @DrawableRes val iconRes: Int, // store drawable resource ID
+
     val label: String)
 {
-    object Home : OwnerBottomNavItem("home", Icons.Default.Home, "Home")
-    object Reports : OwnerBottomNavItem("reports", Icons.Default.Home, "Reports")
-    object ManageEmployee : OwnerBottomNavItem("manage_employee", Icons.Default.Home, "Employees")
-    object ManageFactory : OwnerBottomNavItem("manage_factory", Icons.Default.Home, "Factory")
-    object Profile : OwnerBottomNavItem("profile", Icons.Default.Person, "Profile")
+    object Home : OwnerBottomNavItem("home",
+            R.drawable.home,
+        "Home")
+    object Reports : OwnerBottomNavItem("reports",
+        R.drawable.reports, "Reports")
+    object ManageEmployee : OwnerBottomNavItem(
+        "manage_employee",
+        R.drawable.employees,
+        "Employees")
+    object ManageFactory : OwnerBottomNavItem(
+        "manage_factory",
+        R.drawable.factory,
+        "Factory")
+    object Profile : OwnerBottomNavItem("profile"
+        , R.drawable.profile, "Profile")
 
-    object AddProduct : OwnerBottomNavItem("add_product", Icons.Default.Add, "Products")
+    object AddProduct : OwnerBottomNavItem(
+        "add_product",
+        R.drawable.addproducts, "Products")
 }
 

@@ -1,4 +1,4 @@
-package com.example.partsphere.utils
+package com.example.partsphere.presentation.owner.data
 
 import android.content.Context
 import android.content.SharedPreferences

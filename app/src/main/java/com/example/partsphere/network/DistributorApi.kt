@@ -17,9 +17,8 @@ import com.example.partsphere.presentation.owner.model.FactoryLocationResponse
 import com.example.partsphere.presentation.owner.model.FactoryResponse
 import com.example.partsphere.presentation.owner.model.PaginatedCOResponse
 import com.example.partsphere.presentation.owner.model.PlantHeadResponse
-import com.example.partsphere.presentation.owner.model.SupervisorFactory
+import com.example.partsphere.presentation.owner.model.ProductResponse
 import com.example.partsphere.presentation.owner.model.UnassignedPlantHead
-import com.example.partsphere.presentation.owner.model.UpdateCentralOfficerRequest
 import com.example.partsphere.presentation.owner.model.UpdateFactoryRequest
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -30,7 +29,6 @@ import retrofit2.http.GET
 import retrofit2.http.Multipart
 import retrofit2.http.PATCH
 import retrofit2.http.POST
-import retrofit2.http.PUT
 import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -65,7 +63,7 @@ interface DistributorApi {
     @GET("/api/factory/location-count")
     suspend fun getFactoryCountByLocation(): Response<FactoryLocationResponse>
 
-    //GET all Factories
+
     //GET all Factories
     @GET("/api/factory/all")
     suspend fun getAllFactories(
@@ -137,16 +135,16 @@ interface DistributorApi {
 
 
     //  GET unassigned plant heads
-    @GET("/api/users/unassigned-planthead")
-    suspend fun getUnassignedPlantHeads(): Response<List<UnassignedPlantHead>>
+       @GET("/api/users/unassigned-planthead")
+       suspend fun getUnassignedPlantHeads(): Response<List<UnassignedPlantHead>>
 
 
 
         @GET("api/users/role/plant-head")
         suspend fun getPlantHeads(): Response<List<PlantHeadResponse>>
 
-    @DELETE("api/users/delete/{id}")
-    suspend fun deleteEmployee(@Path("id") id: Int): Response<DeletePlantHeadResponse>
+        @DELETE("api/users/delete/{id}")
+        suspend fun deleteEmployee(@Path("id") id: Int): Response<DeletePlantHeadResponse>
 
 
     //Get All ChiefSupervisor
@@ -174,5 +172,12 @@ interface DistributorApi {
     ): Response<FactoryDropdownResponse>
 
 
+    //get all products
+
+    @GET("/api/product/all")
+    suspend fun getAllProducts(
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 5
+    ): Response<ProductResponse>
 
 }

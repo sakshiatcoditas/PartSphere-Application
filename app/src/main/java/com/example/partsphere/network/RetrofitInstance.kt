@@ -1,7 +1,7 @@
 package com.example.partsphere.network
 
 import android.content.Context
-import com.example.partsphere.utils.PreferenceManager
+import com.example.partsphere.presentation.owner.data.PreferenceManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -15,7 +15,7 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object RetrofitInstance {
 
-    private const val BASE_URL = "https://overlavishly-rightish-amelia.ngrok-free.dev/" // change this
+    private const val BASE_URL = " https://phrasal-twanna-nontragical.ngrok-free.dev" // change this
 
     @Provides
     @Singleton
