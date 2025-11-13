@@ -180,4 +180,8 @@ interface DistributorApi {
         @Query("size") size: Int = 5
     ): Response<ProductResponse>
 
+    @DELETE("products/{id}")
+    suspend fun deleteProduct(@Path("id") productId: Int): Response<Map<String, String>>
+
+
 }

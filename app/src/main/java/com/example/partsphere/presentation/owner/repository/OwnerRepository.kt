@@ -420,6 +420,20 @@ class OwnerRepository @Inject constructor(
             Result.failure(e)
         }
     }
+
+    suspend fun deleteProduct(productId: Int): Result<String> {
+        return try {
+            val response = api.deleteProduct(productId) // Replace with your API call
+            if (response.isSuccessful) {
+                Result.success(response.body()?.get("message") ?: "Deleted successfully")
+            } else {
+                Result.failure(Exception(response.message()))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
 }
 
 

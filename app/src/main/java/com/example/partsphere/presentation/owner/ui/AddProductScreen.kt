@@ -2,6 +2,7 @@ package com.example.partsphere.presentation.owner.ui
 
 import android.R.attr.scaleX
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
@@ -171,11 +172,17 @@ fun AddProductScreen(
                             imageUrl = product.imageUrl
                         ),
                         onEdit = { /* TODO */ },
-                        onDelete = { /* TODO */ }
+                        onDelete = { product ->
+                            viewModel.deleteProduct(product.id) { success, message ->
+                                if (!success) {
+
+                                }
+                            }
+                        }
                     )
                 }
 
-                // 🔹 Show loading item at the end during pagination
+                //  Show loading item at the end during pagination
                 if (uiState.isLoading) {
                     item {
                         Box(

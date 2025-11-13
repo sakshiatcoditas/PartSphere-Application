@@ -5,5 +5,7 @@ data class ProductUiState(
     val currentPage: Int = 0,
     val totalPages: Int = 0,
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val deletingProductIds: Set<Int> = emptySet() // 🔹 track deleting
+
 )

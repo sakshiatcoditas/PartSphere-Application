@@ -455,6 +455,28 @@ class ManageFactoryViewModel @Inject constructor(
         }
     }
 
+    private val _deletingProductIds = MutableStateFlow<Set<Int>>(emptySet())
+    val deletingProductIds: StateFlow<Set<Int>> = _deletingProductIds.asStateFlow()
+
+    fun deleteProduct(productId: Int, onResult: (Boolean, String) -> Unit) {
+        viewModelScope.launch {
+            _deletingProductIds.update { it + productId } // mark as deleting
+
+            val result = repository.deleteProduct(productId)
+            result.onSuccess {
+                // Remove product from list
+                _productUiState.update { current ->
+                    current.copy(products = current.products.filterNot { it.id == productId })
+                }
+                onResult(true, "Product deleted successfully")
+            }.onFailure { e ->
+                onResult(false, e.message ?: "Failed to delete product")
+            }
+
+            _deletingProductIds.update { it - productId } // unmark deleting
+        }
+    }
+
 
 
 }
