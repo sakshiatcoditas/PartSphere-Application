@@ -74,15 +74,24 @@ fun AddProductScreen(
     val listState = rememberLazyListState()
 
     //  Detect end-of-list for pagination
-    LaunchedEffect(listState) {
+    // Detect end-of-list for pagination
+    LaunchedEffect(listState, uiState) {
         snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
             .collect { lastVisibleItemIndex ->
                 val totalItems = uiState.products.size
-                if (lastVisibleItemIndex == totalItems - 1 && !uiState.isLoading && uiState.currentPage < uiState.totalPages - 1) {
-                    viewModel.fetchProducts(uiState.currentPage + 1)
+                val totalPages = uiState.totalPages
+                val currentPage = uiState.currentPage
+
+                // Trigger next page only if we reach the last visible item
+                if (lastVisibleItemIndex == totalItems - 1 &&
+                    !uiState.isLoading &&
+                    currentPage + 1 < totalPages
+                ) {
+                    viewModel.fetchProducts(page = currentPage + 1, isNextPage = true)
                 }
             }
     }
+
 
     //  Filtered and searched list (from API data)
     val filteredList by remember(uiState.products, searchText, selectedFilters) {
