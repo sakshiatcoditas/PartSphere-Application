@@ -5,6 +5,8 @@ import android.content.Context
 import android.net.Uri
 import android.content.SharedPreferences
 
+
+//Shared Prefernce for the profile section data saving
 class ProfilePreferences(context: Context) {
     private val prefs = context.getSharedPreferences("profile_prefs", Context.MODE_PRIVATE)
 

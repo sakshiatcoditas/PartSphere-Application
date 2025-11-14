@@ -2,6 +2,7 @@ package com.example.partsphere.presentation.owner.repository
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import com.example.partsphere.network.DistributorApi
 import com.example.partsphere.presentation.owner.model.AddCOResponse
 import com.example.partsphere.presentation.owner.model.AddChiefSupervisorResponse
@@ -67,8 +68,15 @@ class OwnerRepository @Inject constructor(
 
     suspend fun getFactories(page: Int = 0, size: Int = 5): FactoryResponse? {
         val response = api.getAllFactories(page, size)
+
+        Log.d("FACTORY_API", "HTTP Code: ${response.code()}")
+        Log.d("FACTORY_API", "isSuccessful: ${response.isSuccessful}")
+        Log.d("FACTORY_API", "Body: ${response.body()}")
+        Log.d("FACTORY_API", "ErrorBody: ${response.errorBody()?.string()}")
+
         return if (response.isSuccessful) response.body() else null
     }
+
 
     // OwnerRepository.kt
     suspend fun updateFactory(
@@ -278,23 +286,6 @@ class OwnerRepository @Inject constructor(
     }
 
 
-//    suspend fun deletePlantHead(id: Int): Result<String> {
-//        return try {
-//            val response = api.deleteEmployee(id) // Your Retrofit DELETE API
-//            if (response.isSuccessful && response.body() != null) {
-//                Result.success(response.body()!!.message)
-//            } else {
-//                val errorMsg = response.errorBody()?.string() ?: "Failed to delete Plant Head"
-//                Result.failure(Exception(errorMsg))
-//            }
-//        } catch (e: Exception) {
-//            Result.failure(e)
-//        }
-//    }
-
-
-//  Chief Supervisor Pagination
-//
 
     private var currentChiefPage = 0
     private val chiefPageSize = 3
@@ -354,7 +345,6 @@ class OwnerRepository @Inject constructor(
             try {
                 val response = api.getAllFactoriesForSupervisor()
                 if (response.isSuccessful && response.body() != null) {
-                    // Extract only the data array
                     Result.success(response.body()!!.data)
                 } else {
                     Result.failure(
@@ -394,7 +384,7 @@ class OwnerRepository @Inject constructor(
                 namePart,
                 emailPart,
                 factoryPart,
-                rolePart,    // role included
+                rolePart,
                 photoPart
             )
 
@@ -423,16 +413,20 @@ class OwnerRepository @Inject constructor(
 
     suspend fun deleteProduct(productId: Int): Result<String> {
         return try {
-            val response = api.deleteProduct(productId) // Replace with your API call
+            val response = api.deleteProduct(productId)
             if (response.isSuccessful) {
-                Result.success(response.body()?.get("message") ?: "Deleted successfully")
+                val message = response.body()?.message ?: "Product deleted successfully"
+                Result.success(message)
             } else {
-                Result.failure(Exception(response.message()))
+                val errorMsg = response.errorBody()?.string() ?: "Failed to delete product"
+                Result.failure(Exception(errorMsg))
             }
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
+
+
 
 }
 

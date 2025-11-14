@@ -1,10 +1,14 @@
 package com.example.partsphere.presentation.owner.navigation
 
+import com.example.partsphere.network.PreferenceManager
+
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.partsphere.presentation.login_screen.navigation.LoginRoute
 import com.example.partsphere.presentation.owner.ui.AddProductScreen
 import com.example.partsphere.presentation.owner.ui.manageemployee.ManageEmployeeScreen
 import com.example.partsphere.presentation.owner.ui.ManageFactoryScreen
@@ -16,7 +20,14 @@ import com.example.partsphere.presentation.owner.ui.manageemployee.ChiefSupervis
 import com.example.partsphere.presentation.owner.ui.manageemployee.PlantHeadScreen
 
 @Composable
-fun OwnerNavGraph(navController: NavHostController) {
+fun OwnerNavGraph(
+    navController: NavHostController,
+    rootNavController: NavHostController, // added
+    modifier: Modifier
+) {
+    val context = LocalContext.current
+    val prefs = PreferenceManager(context)
+
     NavHost(navController = navController, startDestination = OwnerBottomNavItem.Home.route) {
 
         composable(OwnerBottomNavItem.Home.route) { OwnerHomeScreen() }
@@ -25,44 +36,31 @@ fun OwnerNavGraph(navController: NavHostController) {
         composable(OwnerBottomNavItem.ManageEmployee.route) {
             ManageEmployeeScreen(
                 onCentralOfficerClick = { navController.navigate("central_officers") },
-                onPlantHeadClick = { navController.navigate("plant_head") },       // updated
-                onChiefSupervisorClick = { navController.navigate("chief_supervisor") } // new
+                onPlantHeadClick = { navController.navigate("plant_head") },
+                onChiefSupervisorClick = { navController.navigate("chief_supervisor") }
             )
         }
 
         composable(OwnerBottomNavItem.ManageFactory.route) { ManageFactoryScreen() }
 
         composable(OwnerBottomNavItem.Profile.route) {
-             val context = LocalContext.current
-            ProfileScreen(context = context)
-           // ProfileScreen(context = context)
-        }
-        // Central Officers screen
-        composable("central_officers") {
-            CentralOfficerScreen(
-                onBackClick = { navController.popBackStack() }
+            ProfileScreen(
+                context = context,
+                onLogoutClick = {
+                    prefs.clearToken()
+                    prefs.clearRole()
+
+                    // Use rootNavController here!
+                    rootNavController.navigate(LoginRoute.Login.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
             )
         }
 
-        // Plant Head screen
-        composable("plant_head") {
-            PlantHeadScreen(
-                onBackClick = { navController.popBackStack() }
-
-            )
-        }
-
-        // Chief Supervisor screen
-        composable("chief_supervisor") {
-            ChiefSupervisorScreen(
-                onBackClick = { navController.popBackStack() }
-
-            )
-        }
-
-        composable(OwnerBottomNavItem.AddProduct.route) {
-            AddProductScreen(
-            )
-        }
+        composable("central_officers") { CentralOfficerScreen(onBackClick = { navController.popBackStack() }) }
+        composable("plant_head") { PlantHeadScreen(onBackClick = { navController.popBackStack() }) }
+        composable("chief_supervisor") { ChiefSupervisorScreen(onBackClick = { navController.popBackStack() }) }
+        composable(OwnerBottomNavItem.AddProduct.route) { AddProductScreen() }
     }
 }

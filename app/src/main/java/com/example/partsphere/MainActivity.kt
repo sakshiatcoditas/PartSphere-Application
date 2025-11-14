@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.navigation.compose.rememberNavController
+import com.example.partsphere.navigation.RootNavGraph
 import com.example.partsphere.presentation.login_screen.navigation.LoginNavGraph
 import com.example.partsphere.presentation.owner.ui.OwnerDashboardScreen
 
@@ -16,15 +17,13 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
         setContent {
             PartSphereTheme {
-
-
-             // val navController = rememberNavController()
-                //RegistrationNavGraph(navController = navController)
-           //  LoginNavGraph(navController = navController)
-                OwnerDashboardScreen()
+                val rootNavController = rememberNavController()
+                RootNavGraph(rootNavController)
             }
         }
+
     }
 }

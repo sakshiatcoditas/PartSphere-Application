@@ -9,6 +9,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -31,6 +32,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -61,6 +63,7 @@ fun AddProductScreen(
     viewModel: ManageFactoryViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.productUiState.collectAsState()
+    val context = LocalContext.current
 
     // 🔹 Load first page
     LaunchedEffect(Unit) {
@@ -155,34 +158,28 @@ fun AddProductScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 🔹 Product list
+            //  Product list
+            // --- In AddProductScreen LazyColumn ---
             LazyColumn(
                 state = listState,
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = PaddingValues(bottom = 80.dp)
             ) {
-                items(filteredList) { product ->
+                items(filteredList, key = { it.id }) { product ->
                     ProductCard(
-                        product = Product(
-                            id = product.id,
-                            name = product.name,
-                            categoryName = product.categoryName,
-                            description = product.description,
-                            price = product.price,
-                            imageUrl = product.imageUrl
-                        ),
-                        onEdit = { /* TODO */ },
-                        onDelete = { product ->
-                            viewModel.deleteProduct(product.id) { success, message ->
-                                if (!success) {
-
+                        product = product,
+                        onEdit = { /* TODO: handle edit */ },
+                        onDelete = { productToDelete ->
+                            viewModel.deleteProduct(productToDelete.id) { success, message ->
+                                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                                if (success) {
+                                    viewModel.fetchProducts(page = 0) // refresh first page
                                 }
                             }
                         }
                     )
                 }
 
-                //  Show loading item at the end during pagination
                 if (uiState.isLoading) {
                     item {
                         Box(
@@ -196,6 +193,7 @@ fun AddProductScreen(
                     }
                 }
             }
+
         }
 
         // 🔹 Floating Add button
@@ -522,6 +520,7 @@ fun FilterDialog(
 
 
 
+// --- In ProductCard ---
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductCard(
@@ -541,23 +540,19 @@ fun ProductCard(
             .graphicsLayer { scaleX = scale; scaleY = scale }
             .background(overlayColor)
             .pointerInput(Unit) {
-                detectTapGestures(
-                    onPress = {
-                        isPressed = true
-                        tryAwaitRelease()
-                        isPressed = false
-                    }
-                )
+                detectTapGestures(onPress = {
+                    isPressed = true
+                    tryAwaitRelease()
+                    isPressed = false
+                })
             },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-
-            // Top Row: Image + Info
+            // Image + info row
             Row(verticalAlignment = Alignment.CenterVertically) {
-
                 Box(
                     modifier = Modifier
                         .size(70.dp)
@@ -580,75 +575,43 @@ fun ProductCard(
                 Spacer(modifier = Modifier.width(12.dp))
 
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = product.name,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
-                        color = Black
-                    )
-                    Text(
-                        text = product.categoryName,
-                        fontSize = 14.sp,
-                        color = Color.Gray
-                    )
-                    Text(
-                        text = "₹${product.price}",
-                        fontSize = 15.sp,
-                        color = Color(0xFF00897B),
-                        fontWeight = FontWeight.Medium
-                    )
+                    Text(product.name, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Black)
+                    Text(product.categoryName, fontSize = 14.sp, color = Color.Gray)
+                    Text("₹${product.price}", fontSize = 15.sp, color = Color(0xFF00897B), fontWeight = FontWeight.Medium)
                 }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
-
-            // Short description
-            Text(
-                text = product.description,
-                fontSize = 14.sp,
-                color = Color.DarkGray,
-                maxLines = 2
-            )
+            Text(product.description, fontSize = 14.sp, color = Color.DarkGray, maxLines = 2)
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Buttons Row
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                OutlinedButton(
-                    onClick = { onEdit(product) },
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Black)
-                ) {
+            // Edit & Delete buttons
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
+                OutlinedButton(onClick = { onEdit(product) }, modifier = Modifier.weight(1f), colors = ButtonDefaults.outlinedButtonColors(contentColor = Black)) {
                     Text("Edit")
                 }
 
-                OutlinedButton(
-                    onClick = { showDeleteDialog = true },
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Black)
-                ) {
+                OutlinedButton(onClick = { showDeleteDialog = true }, modifier = Modifier.weight(1f), colors = ButtonDefaults.outlinedButtonColors(contentColor = Black)) {
                     Text("Delete")
                 }
             }
         }
     }
 
-    // Delete confirmation dialog
+    // Delete confirmation
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
             title = { Text("Delete Product") },
             text = { Text("Are you sure you want to delete this product? This action cannot be undone.") },
             confirmButton = {
-                TextButton(
-                    onClick = {
-                        onDelete(product)
-                        showDeleteDialog = false
-                    }
-                ) { Text("Delete", color = Color.Red) }
+                TextButton(onClick = {
+                    onDelete(product)
+                    showDeleteDialog = false
+                }) {
+                    Text("Delete", color = Color.Red)
+                }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
@@ -658,3 +621,4 @@ fun ProductCard(
         )
     }
 }
+

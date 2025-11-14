@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.partsphere.presentation.login_screen.AuthState
 import com.example.partsphere.presentation.login_screen.repository.LoginRepository
-import com.example.partsphere.presentation.owner.data.PreferenceManager
+import com.example.partsphere.network.PreferenceManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

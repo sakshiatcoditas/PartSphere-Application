@@ -9,16 +9,17 @@ import com.example.partsphere.R
 
 sealed class OwnerBottomNavItem(
     val route: String,
-    //val icon: ImageVector,
-    @DrawableRes val iconRes: Int, // store drawable resource ID
+    @DrawableRes val iconRes: Int,
 
     val label: String)
 {
     object Home : OwnerBottomNavItem("home",
             R.drawable.home,
         "Home")
+
     object Reports : OwnerBottomNavItem("reports",
         R.drawable.reports, "Reports")
+
     object ManageEmployee : OwnerBottomNavItem(
         "manage_employee",
         R.drawable.employees,

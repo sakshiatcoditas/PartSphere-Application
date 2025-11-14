@@ -1,7 +1,7 @@
 package com.example.partsphere.presentation.login_screen.viewmodel
 
 import androidx.lifecycle.ViewModel
-import com.example.partsphere.presentation.owner.data.PreferenceManager
+import com.example.partsphere.network.PreferenceManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 

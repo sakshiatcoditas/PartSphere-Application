@@ -10,6 +10,7 @@ import com.example.partsphere.presentation.owner.model.CreateFactoryRequest
 import com.example.partsphere.presentation.owner.model.CreateFactoryResponse
 import com.example.partsphere.presentation.owner.model.DeleteFactoryResponse
 import com.example.partsphere.presentation.owner.model.DeletePlantHeadResponse
+import com.example.partsphere.presentation.owner.model.DeleteProductResponse
 import com.example.partsphere.presentation.owner.model.DeleteResponse
 import com.example.partsphere.presentation.owner.model.EmployeeCountResponse
 import com.example.partsphere.presentation.owner.model.FactoryDropdownResponse
@@ -35,6 +36,8 @@ import retrofit2.http.Query
 
 interface DistributorApi {
 
+
+
     @Multipart
     @POST("/api/auth/signup")
     suspend fun registerDistributor(
@@ -56,7 +59,7 @@ interface DistributorApi {
 
 
     //API to get the employee count comparision
-    @GET(" /api/users/count")
+    @GET("/api/users/count")
     suspend fun getEmployeeCounts(): Response<EmployeeCountResponse>
 
     //API to get the location wise count of the factories
@@ -70,7 +73,6 @@ interface DistributorApi {
         @Query("page") page: Int = 0,
         @Query("size") size: Int = 5
     ): Response<FactoryResponse>
-
 
     //Update Factory
 //    @PATCH("/api/factory/update/{id}")
@@ -180,8 +182,9 @@ interface DistributorApi {
         @Query("size") size: Int = 5
     ): Response<ProductResponse>
 
-    @DELETE("products/{id}")
-    suspend fun deleteProduct(@Path("id") productId: Int): Response<Map<String, String>>
+    @DELETE("/api/product/delete/{id}")
+    suspend fun deleteProduct(@Path("id") id: Int): Response<DeleteProductResponse>
+
 
 
 }

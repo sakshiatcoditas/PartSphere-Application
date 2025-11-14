@@ -50,16 +50,26 @@ class ManageFactoryViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
+
             try {
                 val response = repository.getFactories(page, size)
-                _factories.value = response?.content ?: emptyList()
+                if (response != null) {
+                    Log.d("FACTORY_API", "✅ Success: received ${response.content.size} factories")
+                    _factories.value = response.content
+                } else {
+                    Log.e("FACTORY_API", "❌ Response body is null — API call failed")
+                    _errorMessage.value = "No data received (maybe unauthorized or wrong endpoint)"
+                    _factories.value = emptyList()
+                }
             } catch (e: Exception) {
+                Log.e("FACTORY_API", "❌ Exception: ${e.localizedMessage}")
                 _errorMessage.value = e.localizedMessage ?: "Unknown error"
             } finally {
                 _isLoading.value = false
             }
         }
     }
+
 
     private val _unassignedPlantHeads = MutableStateFlow<List<UnassignedPlantHead>>(emptyList())
     val unassignedPlantHeads: StateFlow<List<UnassignedPlantHead>> = _unassignedPlantHeads
@@ -463,12 +473,12 @@ class ManageFactoryViewModel @Inject constructor(
             _deletingProductIds.update { it + productId } // mark as deleting
 
             val result = repository.deleteProduct(productId)
-            result.onSuccess {
+            result.onSuccess { message ->
                 // Remove product from list
                 _productUiState.update { current ->
                     current.copy(products = current.products.filterNot { it.id == productId })
                 }
-                onResult(true, "Product deleted successfully")
+                onResult(true, message)
             }.onFailure { e ->
                 onResult(false, e.message ?: "Failed to delete product")
             }

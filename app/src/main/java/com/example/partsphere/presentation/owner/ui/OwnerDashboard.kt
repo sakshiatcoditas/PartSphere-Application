@@ -1,32 +1,15 @@
 package com.example.partsphere.presentation.owner.ui
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.ui.res.painterResource
 
 
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.partsphere.presentation.owner.navigation.OwnerBottomNavItem
@@ -39,7 +22,7 @@ import com.example.partsphere.presentation.owner.navigation.OwnerNavGraph
 //-------------------- This has the Scaffold of the Homescreen just this -----------------------
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OwnerDashboardScreen() {
+fun OwnerDashboardScreen(rootNavController: NavHostController) {
     val navController = rememberNavController()
     val items = listOf(
         OwnerBottomNavItem.Home,
@@ -83,7 +66,10 @@ fun OwnerDashboardScreen() {
         }
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
-            OwnerNavGraph(navController = navController)
+            OwnerNavGraph(navController = navController,
+                modifier = Modifier,
+                rootNavController = navController
+            )
         }
     }
 

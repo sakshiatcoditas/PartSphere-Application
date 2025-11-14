@@ -1,7 +1,7 @@
 package com.example.partsphere.network
 
 
-import com.example.partsphere.presentation.owner.data.PreferenceManager
+import com.example.partsphere.network.PreferenceManager
 import okhttp3.Interceptor
 import okhttp3.Response
 import javax.inject.Inject

@@ -9,67 +9,48 @@ import com.example.partsphere.presentation.login_screen.DistributorDashboardScre
 import com.example.partsphere.presentation.login_screen.LoginScreen
 import com.example.partsphere.presentation.login_screen.HomeScreen
 import com.example.partsphere.presentation.login_screen.viewmodel.LoginViewModel
+import com.example.partsphere.presentation.owner.ui.OwnerMainScreen
 
 @Composable
-fun LoginNavGraph(navController: NavHostController) {
-    val loginViewModel: LoginViewModel = hiltViewModel()
-    val prefs = loginViewModel.getPrefs() // we'll expose a getter for PreferenceManager
+fun LoginNavGraph(rootNavController: NavHostController) {
 
-    //  Determine start destination based on saved token + role
-    val startDestination = when {
-        prefs.getToken() != null && prefs.getRole()?.uppercase() == "OWNER" ->
-            LoginRoute.OwnerDashboard.route
-        prefs.getToken() != null && prefs.getRole()?.uppercase() == "DISTRIBUTOR" ->
-            LoginRoute.DistributorDashboard.route
-        else ->
-            LoginRoute.Login.route
-    }
+    val loginViewModel: LoginViewModel = hiltViewModel()
+    val prefs = loginViewModel.getPrefs()
 
     NavHost(
-        navController = navController,
-        startDestination = startDestination
+        navController = rootNavController,
+        startDestination = LoginRoute.Login.route
     ) {
 
-        // ------------------- Login Screen -------------------
         composable(LoginRoute.Login.route) {
             LoginScreen(
                 viewModel = loginViewModel,
-                onNavigateToRegister = { navController.navigate(LoginRoute.Registration.route) },
-                onNavigateToForgotPassword = { /* Handle forgot password */ },
+                onNavigateToRegister = {
+                    rootNavController.navigate(LoginRoute.Registration.route)
+                },
+                onNavigateToForgotPassword = { },
+
                 onLoginSuccess = { role ->
-                    // Navigate to role-specific screens
                     when (role.uppercase()) {
-                        "OWNER" -> navController.navigate(LoginRoute.OwnerDashboard.route) {
-                            popUpTo(LoginRoute.Login.route) { inclusive = true }
+
+                        "OWNER" -> {
+                            rootNavController.navigate("owner_graph") {
+                                popUpTo(0) { inclusive = true }
+                            }
                         }
-                        "DISTRIBUTOR" -> navController.navigate(LoginRoute.DistributorDashboard.route) {
-                            popUpTo(LoginRoute.Login.route) { inclusive = true }
-                        }
-                        else -> navController.navigate(LoginRoute.Home.route) {
-                            popUpTo(LoginRoute.Login.route) { inclusive = true }
+
+                        "DISTRIBUTOR" -> {
+                            rootNavController.navigate("distributor_graph") {
+                                popUpTo(0) { inclusive = true }
+                            }
                         }
                     }
                 }
             )
         }
 
-        // ------------------- Generic Home Screen -------------------
-        composable(LoginRoute.Home.route) {
-            HomeScreen()
-        }
-
-        // ------------------- Role-based Dashboards -------------------
-        composable(LoginRoute.DistributorDashboard.route) {
-            DistributorDashboardScreen()
-        }
-
-        composable(LoginRoute.OwnerDashboard.route) {
-            // TODO: Implement Owner Dashboard screen
-        }
-
-        // ------------------- Registration Navigation -------------------
         composable(LoginRoute.Registration.route) {
-            // TODO: Link to registration graph if needed
+            // TODO
         }
     }
 }

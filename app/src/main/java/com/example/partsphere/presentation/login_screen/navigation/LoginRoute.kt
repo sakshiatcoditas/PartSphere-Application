@@ -8,4 +8,10 @@ sealed class LoginRoute(val route: String) {
     object Home : LoginRoute("home")
     object DistributorDashboard : LoginRoute("distributor_dashboard")
     object OwnerDashboard : LoginRoute("owner_dashboard")
+    //object OwnerHome : LoginRoute("owner_home")   // UPDATED
+    object OwnerMain : LoginRoute("owner_main")
+
+
+
+
 }

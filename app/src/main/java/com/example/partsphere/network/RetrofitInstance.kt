@@ -1,7 +1,7 @@
 package com.example.partsphere.network
 
 import android.content.Context
-import com.example.partsphere.presentation.owner.data.PreferenceManager
+import com.example.partsphere.network.PreferenceManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -10,22 +10,28 @@ import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
+import okhttp3.logging.HttpLoggingInterceptor
+
 
 @Module
 @InstallIn(SingletonComponent::class)
 object RetrofitInstance {
 
-    private const val BASE_URL = " https://phrasal-twanna-nontragical.ngrok-free.dev" // change this
+    private const val BASE_URL = "https://phrasal-twanna-nontragical.ngrok-free.dev/"
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(
-        prefs: PreferenceManager
-    ): OkHttpClient {
+    fun provideOkHttpClient(prefs: PreferenceManager): OkHttpClient {
+        val logging = HttpLoggingInterceptor().apply {
+            level = HttpLoggingInterceptor.Level.BODY
+        }
+
         return OkHttpClient.Builder()
-            .addInterceptor(AuthInterceptor(prefs)) // If you already added interceptor
+            .addInterceptor(logging) // Add this first
+            .addInterceptor(AuthInterceptor(prefs))
             .build()
     }
+
 
     @Provides
     @Singleton
