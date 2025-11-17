@@ -7,6 +7,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
 import com.example.partsphere.network.PreferenceManager
 import com.example.partsphere.presentation.login_screen.HomeScreen
@@ -15,6 +16,9 @@ import com.example.partsphere.presentation.login_screen.viewmodel.LoginViewModel
 import com.example.partsphere.presentation.login_screen.navigation.LoginRoute
 import com.example.partsphere.presentation.login_screen.DistributorDashboardScreen
 import com.example.partsphere.presentation.owner.ui.OwnerMainScreen
+import com.example.partsphere.presentation.registration.navigation.RegistrationNavGraph
+
+//Updated application
 
 @Composable
 fun RootNavGraph(rootNavController: NavHostController, modifier: Modifier = Modifier) {
@@ -25,12 +29,12 @@ fun RootNavGraph(rootNavController: NavHostController, modifier: Modifier = Modi
         modifier = modifier
     ) {
 
-        // ---- LOGIN GRAPH (nested navigation) ----
+        // LOGIN GRAPH
         navigation(
             startDestination = LoginRoute.Login.route,
             route = "login_graph"
         ) {
-            // Login screen
+
             composable(LoginRoute.Login.route) {
                 val loginViewModel: LoginViewModel = hiltViewModel()
                 val prefs = loginViewModel.getPrefs()
@@ -38,14 +42,12 @@ fun RootNavGraph(rootNavController: NavHostController, modifier: Modifier = Modi
                 LoginScreen(
                     viewModel = loginViewModel,
                     onNavigateToRegister = {
-                        // you can handle registration route here (if you add it)
                         rootNavController.navigate(LoginRoute.Registration.route)
                     },
-                    onNavigateToForgotPassword = { /* TODO */ },
+                    onNavigateToForgotPassword = { },
                     onLoginSuccess = { role ->
                         when (role.uppercase()) {
                             "OWNER" -> {
-                                // navigate to owner flow
                                 rootNavController.navigate("owner_graph") {
                                     popUpTo("login_graph") { inclusive = true }
                                 }
@@ -65,23 +67,25 @@ fun RootNavGraph(rootNavController: NavHostController, modifier: Modifier = Modi
                 )
             }
 
-            // Registration / Home composables inside login_graph (optional)
+            //  Registration Flow
             composable(LoginRoute.Registration.route) {
-                // TODO: Registration UI
+                val registrationNavController = rememberNavController()
+                RegistrationNavGraph(navController = registrationNavController)
             }
 
+
+            // Home for role-less flow
             composable(LoginRoute.Home.route) {
                 HomeScreen()
             }
         }
 
-        // ---- OWNER FLOW (top-level composable) ----
-        // OwnerMainScreen will create its own internal NavHost for bottom tabs (that's fine)
+        // OWNER FLOW
         composable("owner_graph") {
             OwnerMainScreen(rootNavController = rootNavController)
         }
 
-        // ---- DISTRIBUTOR FLOW ----
+        // DISTRIBUTOR FLOW
         composable("distributor_graph") {
             val context = LocalContext.current
             val prefs = PreferenceManager(context)
