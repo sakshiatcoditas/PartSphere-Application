@@ -10,7 +10,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
 import com.example.partsphere.network.PreferenceManager
-import com.example.partsphere.presentation.login_screen.HomeScreen
 import com.example.partsphere.presentation.login_screen.LoginScreen
 import com.example.partsphere.presentation.login_screen.viewmodel.LoginViewModel
 import com.example.partsphere.presentation.login_screen.navigation.LoginRoute
@@ -57,11 +56,7 @@ fun RootNavGraph(rootNavController: NavHostController, modifier: Modifier = Modi
                                     popUpTo("login_graph") { inclusive = true }
                                 }
                             }
-                            else -> {
-                                rootNavController.navigate(LoginRoute.Home.route) {
-                                    popUpTo("login_graph") { inclusive = true }
-                                }
-                            }
+
                         }
                     }
                 )
@@ -74,10 +69,7 @@ fun RootNavGraph(rootNavController: NavHostController, modifier: Modifier = Modi
             }
 
 
-            // Home for role-less flow
-            composable(LoginRoute.Home.route) {
-                HomeScreen()
-            }
+
         }
 
         // OWNER FLOW
