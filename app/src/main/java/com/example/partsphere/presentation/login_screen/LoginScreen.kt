@@ -1,14 +1,15 @@
 package com.example.partsphere.presentation.login_screen
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -16,6 +17,7 @@ import kotlinx.coroutines.flow.collectLatest
 import com.example.partsphere.R
 import com.example.partsphere.ui.theme.Black
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.text.style.TextAlign
 import com.example.partsphere.presentation.login_screen.viewmodel.LoginViewModel
 
 @Composable
@@ -53,8 +55,10 @@ fun LoginScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+
+            // Title
             Text(
-                text = stringResource(R.string.welcome_back),
+                text = "Welcome Back",
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black
@@ -62,10 +66,11 @@ fun LoginScreen(
 
             Spacer(Modifier.height(32.dp))
 
+            // Email Input
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
-                label = { Text(stringResource(R.string.email), color = Color.Black) },
+                label = { Text("Email", color = Color.Black) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
@@ -79,10 +84,11 @@ fun LoginScreen(
 
             Spacer(Modifier.height(16.dp))
 
+            // Password Input
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text(stringResource(R.string.password), color = Color.Black) },
+                label = { Text("Password", color = Color.Black) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
@@ -96,12 +102,20 @@ fun LoginScreen(
 
             Spacer(Modifier.height(8.dp))
 
-            TextButton(onClick = onNavigateToForgotPassword, modifier = Modifier.align(Alignment.End)) {
-                Text(text = stringResource(R.string.forgot_password), color = Black)
+            // Forgot password
+            TextButton(
+                onClick = onNavigateToForgotPassword,
+                modifier = Modifier.align(Alignment.End)
+            ) {
+                Text(
+                    text = "Forgot Password?",
+                    color = Black
+                )
             }
 
             Spacer(Modifier.height(24.dp))
 
+            // Login Button
             Button(
                 onClick = { viewModel.login(email, password) },
                 modifier = Modifier
@@ -114,15 +128,51 @@ fun LoginScreen(
                 ),
                 enabled = viewModel.authState.collectAsState().value !is AuthState.Loading
             ) {
-                Text(stringResource(R.string.login), fontSize = 18.sp)
+                Text("Login", fontSize = 18.sp)
             }
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(32.dp))
 
+            // ---------------- OR ----------------
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                HorizontalDivider(
+                    modifier = Modifier.weight(1f),
+                    thickness = 1.dp,
+                    color = Color.LightGray
+                )
+                Text(
+                    text = "  OR  ",
+                    color = Color.Gray,
+                    fontSize = 14.sp,
+                    textAlign = TextAlign.Center
+                )
+                HorizontalDivider(
+                    modifier = Modifier.weight(1f),
+                    thickness = 1.dp,
+                    color = Color.LightGray
+                )
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            // Signup as Distributor
             TextButton(onClick = onNavigateToRegister) {
-                Text(stringResource(R.string.dont_have_account), color = Black)
+                Text(
+                    text = "Signup as Distributor",
+                    color = Black,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .clickable {
+                            onNavigateToRegister()    //  THIS TRIGGERS Registration Graph
+                        }
+                )
             }
 
+            // Loading Indicator
             if (viewModel.authState.collectAsState().value is AuthState.Loading) {
                 Spacer(Modifier.height(24.dp))
                 CircularProgressIndicator(color = Black)

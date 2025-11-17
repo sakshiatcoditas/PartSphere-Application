@@ -34,7 +34,6 @@ fun RegistrationNavGraph(navController: NavHostController) {
             HomeScreen()
         }
 
-        // Example: Registration flow screens
         composable(Route.PersonalDetails.route) {
             RegisterScreen(
                 viewModel = viewModel,
