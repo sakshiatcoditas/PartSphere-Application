@@ -8,7 +8,6 @@ import androidx.navigation.compose.composable
 import com.example.partsphere.presentation.login_screen.LoginScreen
 import com.example.partsphere.presentation.login_screen.viewmodel.LoginViewModel
 import com.example.partsphere.presentation.registration.registration_screen.*
-import com.example.partsphere.presentation.login_screen.HomeScreen
 import com.example.partsphere.viewmodel.RegistrationViewModel
 
 @Composable
@@ -29,10 +28,7 @@ fun RegistrationNavGraph(navController: NavHostController) {
             )
         }
 
-        composable(Route.Home.route) {
 
-            HomeScreen()
-        }
 
         composable(Route.PersonalDetails.route) {
             RegisterScreen(
