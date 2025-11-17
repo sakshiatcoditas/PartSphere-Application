@@ -18,6 +18,8 @@ import com.example.partsphere.presentation.login_screen.DistributorDashboardScre
 import com.example.partsphere.presentation.owner.ui.OwnerMainScreen
 import com.example.partsphere.presentation.registration.navigation.RegistrationNavGraph
 
+//Updated application
+
 @Composable
 fun RootNavGraph(rootNavController: NavHostController, modifier: Modifier = Modifier) {
 
