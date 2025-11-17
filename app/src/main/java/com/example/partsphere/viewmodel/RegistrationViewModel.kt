@@ -83,7 +83,7 @@ class RegistrationViewModel @Inject constructor(
 
         registrationState = RegistrationState.Loading
 
-        // Build UserRegistrationData matching backend DTO
+
         val user = UserRegistrationData(
             username = username,
             email = email,

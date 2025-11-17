@@ -34,7 +34,7 @@ fun SuccessScreen(
         ) {
             //  Tick Icon (use your drawable or vector)
             Icon(
-                painter = painterResource(id = R.drawable.tick), // replace with your tick drawable
+                painter = painterResource(id = R.drawable.tick),
                 contentDescription = "Success",
                 tint = Black,
                 modifier = Modifier

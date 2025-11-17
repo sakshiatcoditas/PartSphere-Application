@@ -22,7 +22,7 @@ fun RegistrationNavGraph(navController: NavHostController) {
                 viewModel = loginViewModel,
                 onNavigateToRegister = { navController.navigate(Route.PersonalDetails.route) },
                 onNavigateToForgotPassword = { /* Handle forgot password */ },
-                onLoginSuccess = { navController.navigate(Route.Home.route) {
+                onLoginSuccess = { navController.navigate(Route.DistributorHome.route) {
                     popUpTo(Route.Login.route) { inclusive = true }
                 } }
             )

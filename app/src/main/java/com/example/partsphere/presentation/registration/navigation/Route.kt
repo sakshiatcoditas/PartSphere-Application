@@ -8,6 +8,6 @@ Route(val route: String) {
     SetPassword("set_password"),
     Success("success"),
     Login("login"),
-    Home("home")
+    DistributorHome("distributor_home")
 
 }
