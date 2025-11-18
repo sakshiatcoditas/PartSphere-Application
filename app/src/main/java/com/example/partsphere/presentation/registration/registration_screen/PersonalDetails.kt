@@ -16,9 +16,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
+import com.example.partsphere.R
 import com.example.partsphere.presentation.InputField
 import com.example.partsphere.ui.theme.Black
 import com.example.partsphere.utils.Field
@@ -49,9 +51,9 @@ fun RegisterScreen(
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Create Account", fontSize = 28.sp, color = Color.Black)
+            Text(stringResource(R.string.create_account), fontSize = 28.sp, color = Color.Black)
             Spacer(Modifier.height(10.dp))
-            Text("Please enter your details to continue registration", fontSize = 14.sp, color = Color.Gray)
+            Text(stringResource(R.string.enter_details_prompt), fontSize = 14.sp, color = Color.Gray)
             Spacer(Modifier.height(32.dp))
 
             // Avatar picker
@@ -71,15 +73,15 @@ fun RegisterScreen(
                         contentScale = ContentScale.Crop
                     )
                 } else {
-                    Text("Add Photo", color = Color.DarkGray)
+                    Text(stringResource(R.string.avatar), color = Color.DarkGray)
                 }
             }
-            Text("Profile Photo", color = Color.Black, fontSize = 12.sp)
+            Text(stringResource(R.string.profile_photo), color = Color.Black, fontSize = 12.sp)
             Spacer(Modifier.height(24.dp))
 
             // Input Fields
             InputField(
-                label = "Full Name",
+                label = stringResource(R.string.full_name),
                 value = viewModel.username,
                 onValueChange = { viewModel.username = it },
                 error = fieldErrors[Field.FULL_NAME]
@@ -88,7 +90,7 @@ fun RegisterScreen(
             Spacer(Modifier.height(16.dp))
 
             InputField(
-                label = "Email",
+                label = stringResource(R.string.email),
                 value = viewModel.email,
                 onValueChange = { viewModel.email = it },
                 error = fieldErrors[Field.EMAIL]
@@ -96,7 +98,7 @@ fun RegisterScreen(
             Spacer(Modifier.height(16.dp))
 
             InputField(
-                label = "Phone Number",
+                label = stringResource(R.string.phone_number),
                 value = viewModel.phoneNo,
                 onValueChange = { viewModel.phoneNo = it },
                 error = fieldErrors[Field.PHONE]
@@ -108,14 +110,14 @@ fun RegisterScreen(
                 modifier = Modifier.fillMaxWidth().height(50.dp),
                 shape = RoundedCornerShape(15.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Black, contentColor = Color.White)
-            ) { Text("Proceed", fontSize = 16.sp) }
+            ) { Text(stringResource(R.string.proceed), fontSize = 16.sp) }
 
             Spacer(Modifier.height(20.dp))
 
             Row(horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-                Text("Already have an account? ", color = Color.Black, fontSize = 16.sp)
+                Text(stringResource(R.string.already_have_account), color = Color.Black, fontSize = 16.sp)
                 Text(
-                    "Login",
+                    stringResource(R.string.login),
                     color = Black,
                     fontSize = 14.sp,
                     modifier = Modifier.clickable { onLoginClick() }

@@ -21,20 +21,7 @@ class DistributorRepository @Inject constructor(
         user: UserRegistrationData
     ): Result<DistributorRegistrationResponse> {
         return try {
-            // ----------- LOGGING THE FIELDS -----------
-            android.util.Log.d("RegistrationRepo", "Sending registration data:")
-            android.util.Log.d("RegistrationRepo", "username: ${user.username}")
-            android.util.Log.d("RegistrationRepo", "email: ${user.email}")
-            android.util.Log.d("RegistrationRepo", "password: ${user.password}")
-            android.util.Log.d("RegistrationRepo", "phoneNo: ${user.phoneNo}")
-            android.util.Log.d("RegistrationRepo", "companyName: ${user.companyName}")
-            android.util.Log.d("RegistrationRepo", "companyAddress: ${user.companyAddress}")
-            android.util.Log.d("RegistrationRepo", "gstId: ${user.gstId}")
-            android.util.Log.d("RegistrationRepo", "state: ${user.state}")
-            android.util.Log.d("RegistrationRepo", "city: ${user.city}")
-            android.util.Log.d("RegistrationRepo", "pinCode: ${user.pinCode}")
-            android.util.Log.d("RegistrationRepo", "photo: ${user.photo?.path ?: "null"}")
-            // -----------------------------------------
+
 
             val response: Response<DistributorRegistrationResponse> = api.registerDistributor(
                 username = MultipartUtils.createPartFromString(user.username),

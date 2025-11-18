@@ -7,14 +7,16 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.partsphere.network.PreferenceManager
+import com.example.partsphere.presentation.login_screen.DistributorDashboardScreen
 import com.example.partsphere.presentation.login_screen.navigation.LoginNavGraph
 import com.example.partsphere.presentation.login_screen.navigation.LoginRoute
 import com.example.partsphere.presentation.owner.ui.OwnerMainScreen
 import com.example.partsphere.presentation.registration.navigation.RegistrationNavGraph
-import com.example.partsphere.presentation.login_screen.DistributorDashboardScreen
 
 @Composable
 fun RootNavGraph(rootNavController: NavHostController, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val prefs = PreferenceManager(context)
 
     NavHost(
         navController = rootNavController,
@@ -22,27 +24,23 @@ fun RootNavGraph(rootNavController: NavHostController, modifier: Modifier = Modi
         modifier = modifier
     ) {
 
-        // LOGIN FLOW
+        // Login Flow
         composable(LoginRoute.Login.route) {
-            // Just delegate to LoginNavGraph
             LoginNavGraph(rootNavController)
         }
 
-        // REGISTRATION FLOW
+        // Registration Flow
         composable(LoginRoute.Registration.route) {
-            val registrationNavController = rootNavController
-            RegistrationNavGraph(navController = registrationNavController)
+            RegistrationNavGraph(rootNavController)
         }
 
-        // OWNER FLOW
+        // Owner Flow
         composable("owner_graph") {
             OwnerMainScreen(rootNavController)
         }
 
-        // DISTRIBUTOR FLOW
+        // Distributor Flow
         composable("distributor_graph") {
-            val context = LocalContext.current
-            val prefs = PreferenceManager(context)
             DistributorDashboardScreen(rootNavController, prefs)
         }
     }

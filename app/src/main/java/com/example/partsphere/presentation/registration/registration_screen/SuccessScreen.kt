@@ -1,7 +1,4 @@
 package com.example.partsphere.presentation.registration.registration_screen
-
-
-
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -10,6 +7,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.font.FontWeight
@@ -35,7 +33,7 @@ fun SuccessScreen(
             //  Tick Icon (use your drawable or vector)
             Icon(
                 painter = painterResource(id = R.drawable.tick),
-                contentDescription = "Success",
+                contentDescription = stringResource(R.string.success),
                 tint = Black,
                 modifier = Modifier
                     .size(120.dp)
@@ -44,7 +42,7 @@ fun SuccessScreen(
 
             // Thank you text
             Text(
-                text = "Thank you for registering with us!",
+                text = stringResource(R.string.thank_you_registration),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = Black,
@@ -64,7 +62,7 @@ fun SuccessScreen(
                     contentColor = Color.White
                 )
             ) {
-                Text("Back to Login", fontSize = 16.sp)
+                Text(stringResource(R.string.back_to_login), fontSize = 16.sp)
             }
         }
     }

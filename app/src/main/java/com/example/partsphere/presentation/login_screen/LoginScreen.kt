@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.collectLatest
 import com.example.partsphere.R
 import com.example.partsphere.ui.theme.Black
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import com.example.partsphere.presentation.login_screen.viewmodel.LoginViewModel
 
@@ -58,7 +59,7 @@ fun LoginScreen(
 
             // Title
             Text(
-                text = "Welcome Back",
+                text = stringResource(R.string.welcome_back),
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black
@@ -70,7 +71,7 @@ fun LoginScreen(
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
-                label = { Text("Email", color = Color.Black) },
+                label = { Text(stringResource(R.string.email), color = Color.Black) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
@@ -88,7 +89,7 @@ fun LoginScreen(
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Password", color = Color.Black) },
+                label = { Text(stringResource(R.string.password), color = Color.Black) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
@@ -108,7 +109,7 @@ fun LoginScreen(
                 modifier = Modifier.align(Alignment.End)
             ) {
                 Text(
-                    text = "Forgot Password?",
+                    text = stringResource(R.string.forgot_password),
                     color = Black
                 )
             }
@@ -128,7 +129,7 @@ fun LoginScreen(
                 ),
                 enabled = viewModel.authState.collectAsState().value !is AuthState.Loading
             ) {
-                Text("Login", fontSize = 18.sp)
+                Text(stringResource(R.string.login), fontSize = 18.sp)
             }
 
             Spacer(Modifier.height(32.dp))
@@ -144,7 +145,7 @@ fun LoginScreen(
                     color = Color.LightGray
                 )
                 Text(
-                    text = "  OR  ",
+                    text = stringResource(R.string.or),
                     color = Color.Gray,
                     fontSize = 14.sp,
                     textAlign = TextAlign.Center
@@ -159,18 +160,21 @@ fun LoginScreen(
             Spacer(Modifier.height(16.dp))
 
             // Signup as Distributor
-            TextButton(onClick = onNavigateToRegister) {
+
+            TextButton(
+                onClick = { onNavigateToRegister() },
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 Text(
-                    text = "Signup as Distributor",
+                    text = stringResource(R.string.signup_as_distributor),
                     color = Black,
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier
-                        .clickable {
-                            onNavigateToRegister()    //  THIS TRIGGERS Registration Graph
-                        }
+                    fontWeight = FontWeight.Bold
                 )
             }
+
+
+
 
             // Loading Indicator
             if (viewModel.authState.collectAsState().value is AuthState.Loading) {

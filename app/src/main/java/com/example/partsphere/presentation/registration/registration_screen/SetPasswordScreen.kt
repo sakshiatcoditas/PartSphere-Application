@@ -11,10 +11,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.partsphere.R
 import com.example.partsphere.ui.theme.Black
 import com.example.partsphere.utils.RegistrationState
 import com.example.partsphere.utils.Field
@@ -44,7 +46,7 @@ fun SetPasswordScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Set Password", fontSize = 20.sp, color = Black, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) },
+                title = { Text(stringResource(R.string.set_password_title), fontSize = 20.sp, color = Black, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
@@ -73,7 +75,7 @@ fun SetPasswordScreen(
             OutlinedTextField(
                 value = viewModel.password,
                 onValueChange = { viewModel.password = it },
-                label = { Text("Password", color = Black) },
+                label = { Text(stringResource(R.string.password), color = Black) },
                 visualTransformation = PasswordVisualTransformation(),
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
@@ -88,7 +90,7 @@ fun SetPasswordScreen(
             OutlinedTextField(
                 value = viewModel.confirmPassword,
                 onValueChange = { viewModel.confirmPassword = it },
-                label = { Text("Confirm Password", color = Black) },
+                label = {Text(stringResource(R.string.confirm_password), color = Black) },
                 visualTransformation = PasswordVisualTransformation(),
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
@@ -108,7 +110,7 @@ fun SetPasswordScreen(
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Black, contentColor = Color.White)
             ) {
-                Text("Register", fontSize = 18.sp)
+                Text(stringResource(R.string.register), fontSize = 18.sp)
             }
 
             Spacer(Modifier.height(16.dp))
