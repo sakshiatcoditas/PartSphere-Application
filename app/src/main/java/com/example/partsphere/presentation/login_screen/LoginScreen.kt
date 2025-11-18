@@ -164,13 +164,26 @@ fun LoginScreen(
                 onClick = { onNavigateToRegister() },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(
-                    text = "Signup as Distributor",
-                    color = Black,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "Signup as ",
+                        color = Color.Gray,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
+                        text = "Distributor",
+                        color = Black,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
+
+
 
 
 
