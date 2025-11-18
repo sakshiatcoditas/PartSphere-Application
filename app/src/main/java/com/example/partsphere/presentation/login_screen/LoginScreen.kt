@@ -159,18 +159,21 @@ fun LoginScreen(
             Spacer(Modifier.height(16.dp))
 
             // Signup as Distributor
-            TextButton(onClick = onNavigateToRegister) {
+
+            TextButton(
+                onClick = { onNavigateToRegister() },
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 Text(
                     text = "Signup as Distributor",
                     color = Black,
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier
-                        .clickable {
-                            onNavigateToRegister()    //  THIS TRIGGERS Registration Graph
-                        }
+                    fontWeight = FontWeight.Bold
                 )
             }
+
+
+
 
             // Loading Indicator
             if (viewModel.authState.collectAsState().value is AuthState.Loading) {

@@ -5,58 +5,70 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.partsphere.presentation.login_screen.LoginScreen
-import com.example.partsphere.presentation.login_screen.viewmodel.LoginViewModel
+import androidx.navigation.compose.rememberNavController
+import com.example.partsphere.presentation.login_screen.navigation.LoginRoute
 import com.example.partsphere.presentation.registration.registration_screen.*
 import com.example.partsphere.viewmodel.RegistrationViewModel
 
 @Composable
-fun RegistrationNavGraph(navController: NavHostController) {
+fun RegistrationNavGraph(rootNavController: NavHostController) {
     val viewModel: RegistrationViewModel = hiltViewModel()
-    val loginViewModel: LoginViewModel = hiltViewModel() // Shared login VM
+    // separate NavController for internal registration navigation to avoid conflicts
+    val registrationNavController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = Route.PersonalDetails.route) {
-
-        composable(Route.Login.route) {
-            LoginScreen(
-                viewModel = loginViewModel,
-                onNavigateToRegister = { navController.navigate(Route.PersonalDetails.route) },
-                onNavigateToForgotPassword = { /* Handle forgot password */ },
-                onLoginSuccess = { navController.navigate(Route.Home.route) {
-                    popUpTo(Route.Login.route) { inclusive = true }
-                } }
-            )
-        }
-
-
-
+    NavHost(
+        navController = registrationNavController,
+        startDestination = Route.PersonalDetails.route
+    ) {
         composable(Route.PersonalDetails.route) {
             RegisterScreen(
                 viewModel = viewModel,
-                onProceedClick = { if (viewModel.validatePersonalDetails()) navController.navigate(Route.CompanyDetails.route) },
-                onLoginClick = { navController.navigate(Route.Login.route) }
+                onProceedClick = {
+                    if (viewModel.validatePersonalDetails()) {
+                        registrationNavController.navigate(Route.CompanyDetails.route)
+                    }
+                },
+                onLoginClick = {
+                    // Navigate to login in the root graph
+                    rootNavController.navigate(LoginRoute.Login.route) {
+                        popUpTo(LoginRoute.Registration.route) { inclusive = true }
+                    }
+                }
             )
         }
 
         composable(Route.CompanyDetails.route) {
             CompanyDetailsScreen(
                 viewModel = viewModel,
-                onBackClick = { navController.popBackStack() },
-                onProceedClick = { if (viewModel.validateCompanyDetails()) navController.navigate(Route.SetPassword.route) }
+                onBackClick = { registrationNavController.popBackStack() },
+                onProceedClick = {
+                    if (viewModel.validateCompanyDetails()) {
+                        registrationNavController.navigate(Route.SetPassword.route)
+                    }
+                }
             )
         }
 
         composable(Route.SetPassword.route) {
             SetPasswordScreen(
                 viewModel = viewModel,
-                onBackClick = { navController.popBackStack() },
-                onRegisterClick = { navController.navigate(Route.Success.route) { popUpTo(Route.PersonalDetails.route) { inclusive = true } } }
+                onBackClick = { registrationNavController.popBackStack() },
+                onRegisterClick = {
+                    registrationNavController.navigate(Route.Success.route) {
+                        popUpTo(Route.PersonalDetails.route) { inclusive = true }
+                    }
+                }
             )
         }
 
         composable(Route.Success.route) {
             SuccessScreen(
-                onBackToLoginClick = { navController.navigate(Route.Login.route) { popUpTo(Route.PersonalDetails.route) { inclusive = true } } }
+                onBackToLoginClick = {
+                    // Navigate to login in the root graph
+                    rootNavController.navigate(LoginRoute.Login.route) {
+                        popUpTo(LoginRoute.Registration.route) { inclusive = true }
+                    }
+                }
             )
         }
     }
