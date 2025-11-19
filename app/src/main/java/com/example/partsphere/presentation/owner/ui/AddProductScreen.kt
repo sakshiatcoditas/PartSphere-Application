@@ -196,7 +196,7 @@ fun AddProductScreen(
 
         }
 
-        // 🔹 Floating Add button
+        //  Floating Add button
         FloatingActionButton(
             onClick = { showAddProductDialog = true },
             modifier = Modifier
@@ -207,7 +207,9 @@ fun AddProductScreen(
             Icon(Icons.Default.Add, contentDescription = "Add Product", tint = White)
         }
 
-        // 🔹 Error message (if any)
+        //
+        //
+        //  Error message (if any)
         uiState.error?.let { errorMsg ->
             Box(
                 modifier = Modifier

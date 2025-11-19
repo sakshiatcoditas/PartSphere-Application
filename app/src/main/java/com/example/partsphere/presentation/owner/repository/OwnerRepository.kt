@@ -11,11 +11,10 @@ import com.example.partsphere.presentation.owner.model.CreateFactoryResponse
 import com.example.partsphere.presentation.owner.model.EmployeeCount
 import com.example.partsphere.presentation.owner.model.FactoryLocation
 import com.example.partsphere.presentation.owner.model.FactoryResponse
-import com.example.partsphere.presentation.owner.model.PlantHeadResponse
+import com.example.partsphere.presentation.owner.model.PlantHeadPaginatedResponse
 import com.example.partsphere.presentation.owner.model.ProductResponse
 import com.example.partsphere.presentation.owner.model.SupervisorFactory
 import com.example.partsphere.presentation.owner.model.UnassignedPlantHead
-import com.example.partsphere.presentation.owner.model.UpdateCentralOfficerRequest
 import com.example.partsphere.presentation.owner.model.UpdateFactoryRequest
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -280,10 +279,12 @@ class OwnerRepository @Inject constructor(
     }
 
 
-    suspend fun getPlantHeads(): List<PlantHeadResponse>? {
-        val response = api.getPlantHeads()
+    suspend fun getPlantHeads(page: Int, size: Int): PlantHeadPaginatedResponse? {
+        val response = api.getPlantHeads(page, size)
         return if (response.isSuccessful) response.body() else null
     }
+
+
 
 
 

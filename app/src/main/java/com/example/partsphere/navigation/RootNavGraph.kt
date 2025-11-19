@@ -10,6 +10,7 @@ import com.example.partsphere.network.PreferenceManager
 import com.example.partsphere.presentation.login_screen.DistributorDashboardScreen
 import com.example.partsphere.presentation.login_screen.navigation.LoginNavGraph
 import com.example.partsphere.presentation.login_screen.navigation.LoginRoute
+import com.example.partsphere.presentation.owner.ui.OwnerDashboardScreen
 import com.example.partsphere.presentation.owner.ui.OwnerMainScreen
 import com.example.partsphere.presentation.registration.navigation.RegistrationNavGraph
 
@@ -36,7 +37,7 @@ fun RootNavGraph(rootNavController: NavHostController, modifier: Modifier = Modi
 
         // Owner Flow
         composable("owner_graph") {
-            OwnerMainScreen(rootNavController)
+            OwnerDashboardScreen(rootNavController)
         }
 
         // Distributor Flow

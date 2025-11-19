@@ -17,7 +17,7 @@ import com.example.partsphere.presentation.owner.model.FactoryDropdownResponse
 import com.example.partsphere.presentation.owner.model.FactoryLocationResponse
 import com.example.partsphere.presentation.owner.model.FactoryResponse
 import com.example.partsphere.presentation.owner.model.PaginatedCOResponse
-import com.example.partsphere.presentation.owner.model.PlantHeadResponse
+import com.example.partsphere.presentation.owner.model.PlantHeadPaginatedResponse
 import com.example.partsphere.presentation.owner.model.ProductResponse
 import com.example.partsphere.presentation.owner.model.UnassignedPlantHead
 import com.example.partsphere.presentation.owner.model.UpdateFactoryRequest
@@ -39,7 +39,7 @@ interface DistributorApi {
 
 
     @Multipart
-    @POST("/api/auth/signup")
+    @POST("/auth/signup")
     suspend fun registerDistributor(
         @Part("username") username: RequestBody,
         @Part("email") email: RequestBody,
@@ -54,7 +54,7 @@ interface DistributorApi {
         @Part photo: MultipartBody.Part? = null
     ): Response<DistributorRegistrationResponse>
 
-    @POST("/api/auth/login")
+    @POST("/auth/login")
     suspend fun loginUser(@Body request: LoginRequest): Response<LoginResponse>
 
 
@@ -85,7 +85,7 @@ interface DistributorApi {
     suspend fun updateFactory(
         @Path("id") factoryId: Int,
         @Body request: UpdateFactoryRequest
-    ): Response<Map<String, String>> // response like { "message": "Factory updated successfully!" }
+    ): Response<Map<String, String>>
 
 
 
@@ -142,10 +142,15 @@ interface DistributorApi {
 
 
 
-        @GET("api/users/role/plant-head")
-        suspend fun getPlantHeads(): Response<List<PlantHeadResponse>>
+    @GET("api/users/role/plant-head")
+    suspend fun getPlantHeads(
+        @Query("page") page: Int,
+        @Query("size") size: Int
+    ): Response<PlantHeadPaginatedResponse>
 
-        @DELETE("api/users/delete/{id}")
+
+
+    @DELETE("api/users/delete/{id}")
         suspend fun deleteEmployee(@Path("id") id: Int): Response<DeletePlantHeadResponse>
 
 

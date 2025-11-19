@@ -8,6 +8,8 @@ import androidx.navigation.compose.rememberNavController
 import com.example.partsphere.navigation.RootNavGraph
 import com.example.partsphere.presentation.login_screen.navigation.LoginNavGraph
 import com.example.partsphere.presentation.owner.ui.OwnerDashboardScreen
+import com.example.partsphere.presentation.owner.ui.OwnerMainScreen
+import com.example.partsphere.presentation.owner.ui.ReportsScreen
 
 import com.example.partsphere.ui.theme.PartSphereTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -20,8 +22,16 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             PartSphereTheme {
-                val rootNavController = rememberNavController()
-                RootNavGraph(rootNavController)
+               val rootNavController = rememberNavController()
+              RootNavGraph(rootNavController)
+                //OwnerMainScreen(rootNavController)
+
+             //   ReportsScreen()
+
+
+
+
+
             }
         }
 

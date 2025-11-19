@@ -12,6 +12,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.partsphere.presentation.owner.model.AddChiefSupervisorResponse
 import com.example.partsphere.presentation.owner.model.CentralOfficerUiState
 import com.example.partsphere.presentation.owner.model.FactoryItem
+import com.example.partsphere.presentation.owner.model.PlantHeadPaginatedResponse
 import com.example.partsphere.presentation.owner.model.PlantHeadResponse
 import com.example.partsphere.presentation.owner.model.ProductUiState
 import com.example.partsphere.presentation.owner.model.SupervisorFactory
@@ -298,8 +299,13 @@ class ManageFactoryViewModel @Inject constructor(
         }
     }
 
-
     var plantHeads by mutableStateOf<List<PlantHeadResponse>>(emptyList())
+        private set
+
+    private var currentPage = 0
+    private val pageSize = 10
+
+    var isLastPage by mutableStateOf(false)
         private set
 
     var loading by mutableStateOf(false)
@@ -308,12 +314,25 @@ class ManageFactoryViewModel @Inject constructor(
     var error by mutableStateOf<String?>(null)
         private set
 
+
     fun fetchPlantHeads() {
+        if (loading || isLastPage) return
+
         viewModelScope.launch {
             try {
                 loading = true
-                val data = repository.getPlantHeads()
-                plantHeads = data ?: emptyList()
+
+                val result = repository.getPlantHeads(currentPage, pageSize)
+
+                result?.let {
+                    plantHeads = plantHeads + it.content
+                    isLastPage = it.last
+
+                    if (!it.last) {
+                        currentPage++
+                    }
+                }
+
             } catch (e: Exception) {
                 e.printStackTrace()
                 error = e.message
@@ -322,6 +341,7 @@ class ManageFactoryViewModel @Inject constructor(
             }
         }
     }
+
 
 
 //    fun deletePlantHead(plantHeadId: Int, onResult: (Boolean, String) -> Unit) {

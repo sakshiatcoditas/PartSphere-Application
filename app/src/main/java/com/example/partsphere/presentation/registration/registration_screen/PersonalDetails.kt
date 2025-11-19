@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
@@ -49,7 +50,10 @@ fun RegisterScreen(
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Create Account", fontSize = 28.sp, color = Color.Black)
+            Text("Create Account",
+                fontSize = 28.sp, color = Color.Black,
+                fontWeight = FontWeight.Bold,
+            )
             Spacer(Modifier.height(10.dp))
             Text("Please enter your details to continue registration", fontSize = 14.sp, color = Color.Gray)
             Spacer(Modifier.height(32.dp))
@@ -113,13 +117,15 @@ fun RegisterScreen(
             Spacer(Modifier.height(20.dp))
 
             Row(horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-                Text("Already have an account? ", color = Color.Black, fontSize = 16.sp)
+                Text("Already have an account? ", color = Color.Black, fontSize = 15.sp)
                 Text(
                     "Login",
                     color = Black,
+                    fontWeight = FontWeight.Bold,
                     fontSize = 14.sp,
                     modifier = Modifier.clickable { onLoginClick() }
                 )
+
             }
         }
     }

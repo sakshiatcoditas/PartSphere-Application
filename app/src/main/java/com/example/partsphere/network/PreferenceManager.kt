@@ -28,6 +28,7 @@ class PreferenceManager @Inject constructor(
         prefs.edit().remove(KEY_TOKEN).apply()
     }
 
+
     fun saveRole(role: String) {
         prefs.edit().putString(KEY_ROLE, role).apply()
     }

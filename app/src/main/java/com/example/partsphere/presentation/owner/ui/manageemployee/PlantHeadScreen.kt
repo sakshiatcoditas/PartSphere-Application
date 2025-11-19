@@ -9,7 +9,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
@@ -55,6 +54,7 @@ fun PlantHeadScreen(
     onBackClick: () -> Unit = {},
     viewModel: ManageFactoryViewModel = hiltViewModel()
 ) {
+
     var searchText by remember { mutableStateOf("") }
     var showDialog by remember { mutableStateOf(false) }
     var currentEditingHead by remember { mutableStateOf<PlantHead?>(null) }

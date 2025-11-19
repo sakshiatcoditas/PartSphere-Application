@@ -66,7 +66,7 @@ fun ManageFactoryScreen(viewModel: ManageFactoryViewModel = hiltViewModel()) {
         viewModel.fetchFactories()
     }
 
-    // Locations for filtering dropdown (from API + some default)
+    // Locations for filtering dropdown
     val allLocations = (factories.map { it.location } + listOf(
         "Mumbai", "Pune", "Delhi", "Chennai", "Bangalore",
         "Kolkata", "Hyderabad", "Ahmedabad", "Jaipur", "Lucknow"

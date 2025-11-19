@@ -12,7 +12,7 @@ fun LoginNavGraph(
 ) {
     val loginViewModel: LoginViewModel = hiltViewModel()
 
-    // Don't create a nested NavHost - just show LoginScreen directly
+    // We have not created  a nested NavHost - just show LoginScreen directly
     // The NavHost is already managed by RootNavGraph
     LoginScreen(
         viewModel = loginViewModel,
