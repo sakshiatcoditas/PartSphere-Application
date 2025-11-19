@@ -41,7 +41,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
 import com.example.partsphere.presentation.owner.model.Product
 import com.example.partsphere.presentation.owner.ui.components.SearchBar
-import com.example.partsphere.presentation.owner.ui.manageemployee.ProductCard
 import com.example.partsphere.presentation.owner.viewmodel.ManageFactoryViewModel
 import com.example.partsphere.ui.theme.Black
 import com.example.partsphere.ui.theme.White

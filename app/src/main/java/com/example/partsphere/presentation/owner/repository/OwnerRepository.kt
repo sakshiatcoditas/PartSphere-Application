@@ -6,14 +6,17 @@ import android.util.Log
 import com.example.partsphere.network.DistributorApi
 import com.example.partsphere.presentation.owner.model.AddCOResponse
 import com.example.partsphere.presentation.owner.model.AddChiefSupervisorResponse
+import com.example.partsphere.presentation.owner.model.AddPlantHeadResponse
 import com.example.partsphere.presentation.owner.model.CreateFactoryRequest
 import com.example.partsphere.presentation.owner.model.CreateFactoryResponse
 import com.example.partsphere.presentation.owner.model.EmployeeCount
 import com.example.partsphere.presentation.owner.model.FactoryLocation
 import com.example.partsphere.presentation.owner.model.FactoryResponse
 import com.example.partsphere.presentation.owner.model.PlantHeadPaginatedResponse
+import com.example.partsphere.presentation.owner.model.PlantHeadResponse
 import com.example.partsphere.presentation.owner.model.ProductResponse
 import com.example.partsphere.presentation.owner.model.SupervisorFactory
+import com.example.partsphere.presentation.owner.model.UnassignedFactoryItem
 import com.example.partsphere.presentation.owner.model.UnassignedPlantHead
 import com.example.partsphere.presentation.owner.model.UpdateFactoryRequest
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -21,6 +24,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.HttpException
@@ -428,8 +432,87 @@ class OwnerRepository @Inject constructor(
     }
 
 
+    suspend fun getUnassignedFactories(): Result<List<UnassignedFactoryItem>> {
+        return try {
+            val response = api.getUnassignedFactories()
+            if (response.isSuccessful && response.body() != null) {
+                val body = response.body()!!
+                if (body.status == "success") {
+                    Result.success(body.data)
+                } else {
+                    Result.failure(Exception("API returned status: ${body.status}"))
+                }
+            } else {
+                Result.failure(Exception("Failed to fetch factories: ${response.message()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun addPlantHead(
+        username: String,
+        email: String,
+        role: String,
+        factoryId: Int,
+        photoUri: Uri? = null
+    ): Result<AddPlantHeadResponse> {
+        return try {
+            val usernameBody = username.toRequestBody("text/plain".toMediaTypeOrNull())
+            val emailBody = email.toRequestBody("text/plain".toMediaTypeOrNull())
+            val roleBody = role.toRequestBody("text/plain".toMediaTypeOrNull())
+            val factoryBody = factoryId.toString().toRequestBody("text/plain".toMediaTypeOrNull())
+
+            val photoPart: MultipartBody.Part? = photoUri?.let { uri ->
+                try {
+                    val inputStream = context.contentResolver.openInputStream(uri)
+                    val file = File(context.cacheDir, "plant_head_${System.currentTimeMillis()}.jpg")
+                    file.outputStream().use { outputStream ->
+                        inputStream?.copyTo(outputStream)
+                    }
+                    val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
+                    MultipartBody.Part.createFormData("photo", file.name, requestFile)
+                } catch (e: Exception) {
+                    null
+                }
+            }
+
+            val response = api.addPlantHead(
+                usernameBody,
+                emailBody,
+                roleBody,
+                factoryBody,
+                photoPart
+            )
+
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                Result.failure(Exception("Failed: ${response.code()} - ${response.message()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+
+    suspend fun deletePlantHead(id: Int): Result<String> {
+        return try {
+            val response = api.deletePlantHead(id)
+            if (response.isSuccessful) {
+                Result.success("User deleted successfully with id: $id")
+            } else {
+                Result.failure(Exception("Failed to delete user: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 
 }
+
+
+
 
 
 

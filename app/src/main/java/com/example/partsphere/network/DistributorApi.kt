@@ -5,6 +5,7 @@ import com.example.partsphere.presentation.login_screen.model.LoginRequest
 import com.example.partsphere.presentation.login_screen.model.LoginResponse
 import com.example.partsphere.presentation.owner.model.AddCOResponse
 import com.example.partsphere.presentation.owner.model.AddChiefSupervisorResponse
+import com.example.partsphere.presentation.owner.model.AddPlantHeadResponse
 import com.example.partsphere.presentation.owner.model.ChiefSupervisorPaginatedResponse
 import com.example.partsphere.presentation.owner.model.CreateFactoryRequest
 import com.example.partsphere.presentation.owner.model.CreateFactoryResponse
@@ -18,7 +19,9 @@ import com.example.partsphere.presentation.owner.model.FactoryLocationResponse
 import com.example.partsphere.presentation.owner.model.FactoryResponse
 import com.example.partsphere.presentation.owner.model.PaginatedCOResponse
 import com.example.partsphere.presentation.owner.model.PlantHeadPaginatedResponse
+import com.example.partsphere.presentation.owner.model.PlantHeadResponse
 import com.example.partsphere.presentation.owner.model.ProductResponse
+import com.example.partsphere.presentation.owner.model.UnassignedFactoryResponse
 import com.example.partsphere.presentation.owner.model.UnassignedPlantHead
 import com.example.partsphere.presentation.owner.model.UpdateFactoryRequest
 import okhttp3.MultipartBody
@@ -149,6 +152,23 @@ interface DistributorApi {
     ): Response<PlantHeadPaginatedResponse>
 
 
+    @GET("api/factory")
+    suspend fun getUnassignedFactories(
+        @Query("type") type: String = "unassigned"
+    ): Response<UnassignedFactoryResponse>
+
+    @POST("api/users/ph-supervisor")
+    @Multipart
+    suspend fun addPlantHead(
+        @Part("username") username: RequestBody,
+        @Part("email") email: RequestBody,
+        @Part("role") role: RequestBody,
+        @Part("factory_id") factoryId: RequestBody,
+        @Part photo: MultipartBody.Part? = null
+    ): Response<AddPlantHeadResponse>
+
+    @DELETE("/api/users/delete/{id}")
+    suspend fun deletePlantHead(@Path("id") id: Int): Response<Unit>
 
 
 
@@ -191,6 +211,8 @@ interface DistributorApi {
 
     @DELETE("/api/product/delete/{id}")
     suspend fun deleteProduct(@Path("id") id: Int): Response<DeleteProductResponse>
+
+
 
 
 

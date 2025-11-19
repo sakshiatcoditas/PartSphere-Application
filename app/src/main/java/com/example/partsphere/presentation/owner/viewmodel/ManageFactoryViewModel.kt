@@ -10,12 +10,14 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.partsphere.presentation.owner.model.AddChiefSupervisorResponse
+import com.example.partsphere.presentation.owner.model.AddPlantHeadResponse
 import com.example.partsphere.presentation.owner.model.CentralOfficerUiState
 import com.example.partsphere.presentation.owner.model.FactoryItem
 import com.example.partsphere.presentation.owner.model.PlantHeadPaginatedResponse
 import com.example.partsphere.presentation.owner.model.PlantHeadResponse
 import com.example.partsphere.presentation.owner.model.ProductUiState
 import com.example.partsphere.presentation.owner.model.SupervisorFactory
+import com.example.partsphere.presentation.owner.model.UnassignedFactoryItem
 import com.example.partsphere.presentation.owner.model.UnassignedPlantHead
 import com.example.partsphere.presentation.owner.model.UpdateFactoryRequest
 import com.example.partsphere.presentation.owner.repository.OwnerRepository
@@ -55,15 +57,15 @@ class ManageFactoryViewModel @Inject constructor(
             try {
                 val response = repository.getFactories(page, size)
                 if (response != null) {
-                    Log.d("FACTORY_API", "✅ Success: received ${response.content.size} factories")
+                    Log.d("FACTORY_API", " Success: received ${response.content.size} factories")
                     _factories.value = response.content
                 } else {
-                    Log.e("FACTORY_API", "❌ Response body is null — API call failed")
+                    Log.e("FACTORY_API", " Response body is null — API call failed")
                     _errorMessage.value = "No data received (maybe unauthorized or wrong endpoint)"
                     _factories.value = emptyList()
                 }
             } catch (e: Exception) {
-                Log.e("FACTORY_API", "❌ Exception: ${e.localizedMessage}")
+                Log.e("FACTORY_API", " Exception: ${e.localizedMessage}")
                 _errorMessage.value = e.localizedMessage ?: "Unknown error"
             } finally {
                 _isLoading.value = false
@@ -343,7 +345,6 @@ class ManageFactoryViewModel @Inject constructor(
     }
 
 
-
 //    fun deletePlantHead(plantHeadId: Int, onResult: (Boolean, String) -> Unit) {
 //        viewModelScope.launch {
 //            loading = true
@@ -508,8 +509,102 @@ class ManageFactoryViewModel @Inject constructor(
     }
 
 
+    // Unassigned Factories State (for dropdown)
+    private val _unassignedFactories = MutableStateFlow<List<UnassignedFactoryItem>>(emptyList())
+    val unassignedFactories: StateFlow<List<UnassignedFactoryItem>> = _unassignedFactories.asStateFlow()
+
+    private val _factoriesLoading = MutableStateFlow(false)
+    val factoriesLoading: StateFlow<Boolean> = _factoriesLoading.asStateFlow()
+
+    private val _factoriesError = MutableStateFlow<String?>(null)
+    val factoriesError: StateFlow<String?> = _factoriesError.asStateFlow()
+
+
+
+    // Add Plant Head State
+    private val _addPlantHeadResult = MutableStateFlow<Result<AddPlantHeadResponse>?>(null)
+    val addPlantHeadResult: StateFlow<Result<AddPlantHeadResponse>?> = _addPlantHeadResult.asStateFlow()
+
+    fun fetchUnassignedFactories() {
+        viewModelScope.launch {
+            _factoriesLoading.value = true
+            _factoriesError.value = null
+            val result = repository.getUnassignedFactories()
+            result.onSuccess { factories ->
+                _unassignedFactories.value = factories
+            }.onFailure { exception ->
+                _factoriesError.value = exception.message ?: "Failed to load factories"
+            }
+            _factoriesLoading.value = false
+        }
+    }
+    // Loading state for Add PlantHead
+    private val _plantHeadLoading = MutableStateFlow(false)
+    val plantHeadLoading: StateFlow<Boolean> = _plantHeadLoading.asStateFlow()
+
+    // Error state for Add PlantHead
+    private val _plantHeadError = MutableStateFlow<String?>(null)
+    val plantHeadError: StateFlow<String?> = _plantHeadError.asStateFlow()
+
+    fun addNewPlantHead(
+        username: String,
+        email: String,
+        role: String,
+        factoryId: Int,
+        photoUri: Uri? = null
+    ) {
+        viewModelScope.launch {
+            _plantHeadLoading.value = true
+            _plantHeadError.value = null
+            _addPlantHeadResult.value = null
+
+            try {
+                val result = repository.addPlantHead(username, email, role, factoryId, photoUri)
+                _addPlantHeadResult.value = result
+
+                result.onSuccess {
+                    // Refresh lists after successful addition
+                    fetchPlantHeads()
+                    fetchUnassignedFactories() // remove assigned factory
+                }.onFailure { e ->
+                    _plantHeadError.value = e.message ?: "Failed to add Plant Head"
+                }
+
+            } catch (e: Exception) {
+                _plantHeadError.value = e.message ?: "Unknown error"
+            } finally {
+                _plantHeadLoading.value = false
+            }
+        }
+    }
+    fun clearAddResult() {
+        _addPlantHeadResult.value = null
+    }
+
+    fun deletePlantHead(id: Int, onSuccess: (() -> Unit)? = null) {
+        viewModelScope.launch {
+            loading = true
+            try {
+                val result = repository.deletePlantHead(id)
+                result.fold(
+                    onSuccess = {
+                        plantHeads = plantHeads.filterNot { it.id == id }
+                        onSuccess?.invoke()
+                    },
+                    onFailure = { error = it.message }
+                )
+            } catch (e: Exception) {
+                error = e.message
+            } finally {
+                loading = false
+            }
+        }
+    }
+
 
 }
+
+
 
 
 

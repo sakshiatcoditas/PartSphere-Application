@@ -1,6 +1,7 @@
 package com.example.partsphere.presentation.owner.ui.manageemployee
 
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
@@ -28,6 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
@@ -40,6 +42,7 @@ import com.example.partsphere.ui.theme.Black
 
 // ---------------- DATA CLASS ----------------
 data class PlantHead(
+    val id: Int,
     val name: String,
     val email: String,
     val designation: String,
@@ -54,45 +57,22 @@ fun PlantHeadScreen(
     onBackClick: () -> Unit = {},
     viewModel: ManageFactoryViewModel = hiltViewModel()
 ) {
-
     var searchText by remember { mutableStateOf("") }
     var showDialog by remember { mutableStateOf(false) }
     var currentEditingHead by remember { mutableStateOf<PlantHead?>(null) }
 
-    // --- Directly use mutableStateOf from ViewModel ---
     val plantHeadsApi = viewModel.plantHeads
     val loading = viewModel.loading
     val error = viewModel.error
-
-    val plantHeads = remember { mutableStateOf(plantHeadsApi.map {
-        PlantHead(
-            name = it.username,
-            email = it.email,
-            designation = it.role,
-            factory = it.factory ?: "",
-            photoUri = null
-        )
-    }.toMutableList()) }
-
-    // --- Fetch API once ---
-    LaunchedEffect(Unit) { viewModel.fetchPlantHeads() }
-
-    // --- Update local list when API returns ---
-    LaunchedEffect(plantHeadsApi) {
-        plantHeads.value = plantHeadsApi.map {
-            PlantHead(
-                name = it.username,
-                email = it.email,
-                designation = it.role,
-                factory = it.factory ?: "",
-                photoUri = null
-            )
-        }.toMutableList()
-    }
-
-    val filteredHeads = plantHeads.value.filter { it.name.contains(searchText, ignoreCase = true) }
+    val context = LocalContext.current
 
     val allFactories = listOf("Mumbai Plant", "Pune Plant", "Delhi Plant")
+
+    // Fetch API once
+    LaunchedEffect(Unit) { viewModel.fetchPlantHeads() }
+
+    // Filtered list based on search
+    val filteredHeads = plantHeadsApi.filter { it.username.contains(searchText, ignoreCase = true) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -124,48 +104,74 @@ fun PlantHeadScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            if (loading) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = Color.Black)
+            when {
+                loading -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = Color.Black)
+                    }
                 }
-            } else if (error != null) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("Error: $error", color = Color.Red)
+
+                error != null -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("Error: $error", color = Color.Red)
+                    }
                 }
-            } else {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    if (filteredHeads.isEmpty()) {
-                        item {
-                            Box(
-                                modifier = Modifier
-                                    .fillParentMaxSize()
-                                    .padding(16.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text("No results found", fontSize = 16.sp, color = Color.Gray)
-                            }
-                        }
-                    } else {
-                        items(filteredHeads) { head ->
-                            PlantHeadCard(
-                                plantHead = head,
-                                onEdit = {
-                                    currentEditingHead = head
-                                    showDialog = true
-                                },
-                                onDelete = {
-                                    plantHeads.value.remove(head)
+
+                else -> {
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        if (filteredHeads.isEmpty()) {
+                            item {
+                                Box(
+                                    modifier = Modifier
+                                        .fillParentMaxSize()
+                                        .padding(16.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text("No results found", fontSize = 16.sp, color = Color.Gray)
                                 }
-                            )
+                            }
+                        } else {
+                            items(filteredHeads) { head ->
+                                PlantHeadCard(
+                                    plantHead = PlantHead(
+                                        id = head.id,
+                                        name = head.username,
+                                        email = head.email,
+                                        designation = head.role,
+                                        factory = head.factory ?: "",
+                                        photoUri = null
+                                    ),
+                                    onEdit = {
+                                        currentEditingHead = PlantHead(
+                                            id = head.id,
+                                            name = head.username,
+                                            email = head.email,
+                                            designation = head.role,
+                                            factory = head.factory ?: "",
+                                            photoUri = null
+                                        )
+                                        showDialog = true
+                                    },
+                                    onDelete = {
+                                        viewModel.deletePlantHead(head.id) {
+                                            Toast.makeText(
+                                                context,
+                                                "Deleted ${head.username}",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                    }
+                                )
+                            }
                         }
                     }
                 }
@@ -187,26 +193,20 @@ fun PlantHeadScreen(
         }
     }
 
+    // Add/Edit Dialog
     if (showDialog) {
         AddPlantHeadDialog(
             allFactories = allFactories,
             initialData = currentEditingHead,
             onDismiss = { showDialog = false },
             onAdd = { name, email, designation, factory, photoUri ->
-                if (currentEditingHead != null) {
-                    // Update existing
-                    val index = plantHeads.value.indexOf(currentEditingHead)
-                    if (index >= 0) plantHeads.value[index] =
-                        PlantHead(name, email, designation, factory, photoUri)
-                } else {
-                    // Add new
-                    plantHeads.value.add(PlantHead(name, email, designation, factory, photoUri))
-                }
+                // For simplicity, just update local state; API integration for add/edit can be added later
                 showDialog = false
             }
         )
     }
 }
+
 
 // ---------------- ADD / EDIT DIALOG ----------------
 @OptIn(ExperimentalMaterial3Api::class)

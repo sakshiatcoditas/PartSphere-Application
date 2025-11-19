@@ -1,7 +1,7 @@
 package com.example.partsphere.presentation.owner.model
 
-data class SupervisorFactory(
-    val id: Long,
+data class UnassignedFactoryItem(
+    val id: Int,
     val name: String,
     val location: String
 )

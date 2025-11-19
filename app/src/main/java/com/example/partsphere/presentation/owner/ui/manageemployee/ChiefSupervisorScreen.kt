@@ -3,9 +3,13 @@ package com.example.partsphere.presentation.owner.ui.manageemployee
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -20,6 +24,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
@@ -134,14 +140,8 @@ fun ChiefSupervisorScreen(
                     ) {
                         items(filteredSupervisors, key = { it.id }) {
                             supervisor ->
-                            PlantHeadCard(
-                                plantHead = PlantHead(
-                                    name = supervisor.username,
-                                    email = supervisor.email,
-                                    designation = supervisor.role,
-                                    factory = supervisor.factoryName ?: "Unassigned",
-                                    photoUri = supervisor.photo?.let { Uri.parse(it) }
-                                ),
+                            ChiefSupervisorCard(
+                                supervisor = supervisor,
                                 onEdit = {
                                     currentEditingSupervisor = supervisor
                                     showDialog = true
@@ -187,37 +187,31 @@ fun ChiefSupervisorScreen(
     if (showDialog) {
         AddChiefSupervisorDialog(
             viewModel = viewModel,
-            initialData = currentEditingSupervisor?.let { supervisor ->
-                PlantHead(
-                    name = supervisor.username,
-                    email = supervisor.email,
-                    designation = supervisor.role,
-                    factory = supervisor.factoryName ?: "",
-                    photoUri = supervisor.photo?.let { Uri.parse(it) }
-                )
-            },
+            initialData = currentEditingSupervisor, // Pass the supervisor object directly
             onDismiss = { showDialog = false }
         )
     }
+
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddChiefSupervisorDialog(
     viewModel: ManageFactoryViewModel,
-    onDismiss: () -> Unit,
-    initialData: PlantHead? = null
+    initialData: AddChiefSupervisorResponse? = null,
+    onDismiss: () -> Unit
 ) {
     val factories by viewModel.supervisorFactories.collectAsState()
 // API-fetched factories
 
-    var name by remember { mutableStateOf(TextFieldValue(initialData?.name ?: "")) }
+    var name by remember { mutableStateOf(TextFieldValue(initialData?.username ?: "")) }
     var email by remember { mutableStateOf(TextFieldValue(initialData?.email ?: "")) }
-    var designation by remember { mutableStateOf(initialData?.designation ?: "Chief-Supervisor") }
+    var designation by remember { mutableStateOf(initialData?.role ?: "") }
     var designationExpanded by remember { mutableStateOf(false) }
-    var selectedFactory by remember { mutableStateOf(initialData?.factory ?: "") }
+    var selectedFactory by remember { mutableStateOf(initialData?.factoryName ?: "") }
     var factoryExpanded by remember { mutableStateOf(false) }
-    var photoUri by remember { mutableStateOf(initialData?.photoUri) }
+    var photoUri by remember { mutableStateOf(initialData?.photo?.let { Uri.parse(it) }) }
+
     var isLoading by remember { mutableStateOf(false) }
 
     val launcher = rememberLauncherForActivityResult(
@@ -378,4 +372,103 @@ fun AddChiefSupervisorDialog(
         shape = RoundedCornerShape(16.dp),
         containerColor = Color.White
     )
+}
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ChiefSupervisorCard(
+    supervisor: AddChiefSupervisorResponse,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
+) {
+    var isPressed by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    val scale by animateFloatAsState(if (isPressed) 0.95f else 1f, tween(100))
+    val overlayColor by animateColorAsState(if (isPressed) Color(0x33000000) else Color.Transparent, tween(150))
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .graphicsLayer { scaleX = scale; scaleY = scale }
+            .background(overlayColor)
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onPress = {
+                        isPressed = true
+                        tryAwaitRelease()
+                        isPressed = false
+                    }
+                )
+            },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(60.dp)
+                        .background(Color.LightGray, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (supervisor.photo != null) {
+                        Image(
+                            painter = rememberAsyncImagePainter(Uri.parse(supervisor.photo)),
+                            contentDescription = "Supervisor Photo",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        Text("No Photo", fontSize = 12.sp, color = Color.DarkGray)
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(supervisor.username, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Text("Email: ${supervisor.email}", fontSize = 14.sp, color = Color.DarkGray)
+                    Text("Designation: ${supervisor.role}", fontSize = 14.sp, color = Color.DarkGray)
+                    Text("Factory: ${supervisor.factoryName ?: "Unassigned"}", fontSize = 14.sp, color = Color.DarkGray)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                OutlinedButton(
+                    onClick = onEdit,
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Black)
+                ) { Text("Edit") }
+
+                OutlinedButton(
+                    onClick = { showDeleteDialog = true },
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Black)
+                ) { Text("Delete") }
+            }
+        }
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Delete Supervisor") },
+            text = { Text("Are you sure you want to delete ${supervisor.username}?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    onDelete()
+                    showDeleteDialog = false
+                }) { Text("Delete", color = Color.Red) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) { Text("Cancel", color = Color.Gray) }
+            }
+        )
+    }
 }
