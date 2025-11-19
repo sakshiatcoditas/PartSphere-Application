@@ -132,7 +132,8 @@ fun ChiefSupervisorScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                         modifier = Modifier.fillMaxSize()
                     ) {
-                        items(filteredSupervisors, key = { it.id }) { supervisor ->
+                        items(filteredSupervisors, key = { it.id }) {
+                            supervisor ->
                             PlantHeadCard(
                                 plantHead = PlantHead(
                                     name = supervisor.username,

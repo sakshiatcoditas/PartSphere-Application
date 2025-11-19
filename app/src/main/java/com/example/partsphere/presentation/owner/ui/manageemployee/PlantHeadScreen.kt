@@ -399,9 +399,11 @@ fun PlantHeadCard(
                 )
             },
         shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
                         .size(60.dp)
@@ -416,7 +418,7 @@ fun PlantHeadCard(
                             modifier = Modifier.fillMaxSize()
                         )
                     } else {
-                        Text("No Photo", fontSize = 10.sp)
+                        Text("No Photo", fontSize = 12.sp, color = Color.DarkGray)
                     }
                 }
 
@@ -424,9 +426,9 @@ fun PlantHeadCard(
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(plantHead.name, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                    Text("Email: ${plantHead.email}", fontSize = 14.sp, color = Color.Gray)
-                    Text("Designation: ${plantHead.designation}", fontSize = 14.sp, color = Color.Gray)
-                    Text("Factory: ${plantHead.factory}", fontSize = 14.sp, color = Color.Gray)
+                    Text("Email: ${plantHead.email}", fontSize = 14.sp, color = Color.DarkGray)
+                    Text("Designation: ${plantHead.designation}", fontSize = 14.sp, color = Color.DarkGray)
+                    Text("Factory: ${plantHead.factory}", fontSize = 14.sp, color = Color.DarkGray)
                 }
             }
 
@@ -439,11 +441,13 @@ fun PlantHeadCard(
                 OutlinedButton(
                     onClick = onEdit,
                     modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Black)
                 ) { Text("Edit") }
 
                 OutlinedButton(
                     onClick = { showDeleteDialog = true },
                     modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Black)
                 ) { Text("Delete") }
             }
         }
@@ -458,14 +462,15 @@ fun PlantHeadCard(
                 TextButton(onClick = {
                     onDelete()
                     showDeleteDialog = false
-                }) { Text("Delete") }
+                }) { Text("Delete", color = Color.Red) }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) { Text("Cancel") }
+                TextButton(onClick = { showDeleteDialog = false }) { Text("Cancel", color = Color.Gray) }
             }
         )
     }
 }
+
 data class ProductCardData(
     val name: String,
     val category: String,

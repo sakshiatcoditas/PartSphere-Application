@@ -140,13 +140,15 @@ interface DistributorApi {
        @GET("/api/users/unassigned-planthead")
        suspend fun getUnassignedPlantHeads(): Response<List<UnassignedPlantHead>>
 
-
+//------------ Plant Head -----------------------------------------
 
     @GET("api/users/role/plant-head")
     suspend fun getPlantHeads(
         @Query("page") page: Int,
         @Query("size") size: Int
     ): Response<PlantHeadPaginatedResponse>
+
+
 
 
 

@@ -23,12 +23,16 @@ import com.example.partsphere.presentation.owner.ui.manageemployee.PlantHeadScre
 fun OwnerNavGraph(
     navController: NavHostController,
     rootNavController: NavHostController, // added
-    modifier: Modifier
+    modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val prefs = PreferenceManager(context)
 
-    NavHost(navController = navController, startDestination = OwnerBottomNavItem.Home.route) {
+    NavHost(
+        navController = navController,
+        startDestination = OwnerBottomNavItem.Home.route,
+        modifier = modifier
+    ) {
 
         composable(OwnerBottomNavItem.Home.route) { OwnerHomeScreen() }
         composable(OwnerBottomNavItem.Reports.route) { ReportsScreen() }
