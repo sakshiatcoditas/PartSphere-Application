@@ -226,8 +226,6 @@ fun CentralOfficerScreen(
 }
 
 
-
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CentralOfficerCard(
@@ -384,6 +382,11 @@ fun AddCentralOfficerDialog(
     var email by remember { mutableStateOf(TextFieldValue(initialData?.email ?: "")) }
     var photoUri by remember { mutableStateOf<Uri?>(initialData?.localPhotoUri) }
 
+    // --- Validation state ---
+    var nameError by remember { mutableStateOf<String?>(null) }
+    var emailError by remember { mutableStateOf<String?>(null) }
+    var emailFormatError by remember { mutableStateOf<String?>(null) }
+
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
         onResult = { uri -> photoUri = uri }
@@ -430,26 +433,64 @@ fun AddCentralOfficerDialog(
                             Text("Upload Photo", color = Color.Black, fontSize = 14.sp)
                         }
                     }
-
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-
                 OutlinedTextField(
                     value = name,
-                    onValueChange = { name = it },
+                    onValueChange = { input ->
+                        name = input
+                        // Clear error if valid
+                        nameError = when {
+                            input.text.isBlank() -> "Name cannot be empty"
+                            !input.text.matches(Regex("^[a-zA-Z\\s]*\$")) -> "Name can contain only letters"
+                            else -> null
+                        }
+                    },
                     label = { Text("Full Name") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = nameError != null
                 )
+
+                if (nameError != null) {
+                    Text(
+                        text = nameError ?: "",
+                        color = Color.Red,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(start = 16.dp)
+                    )
+                }
+
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 OutlinedTextField(
                     value = email,
-                    onValueChange = { email = it },
+                    onValueChange = {
+                        email = it
+                        if (it.text.isNotBlank()) emailError = null
+                        if (android.util.Patterns.EMAIL_ADDRESS.matcher(it.text).matches()) emailFormatError = null
+                    },
                     label = { Text("Email") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = emailError != null || emailFormatError != null
                 )
+                if (emailError != null) {
+                    Text(
+                        text = emailError ?: "",
+                        color = Color.Red,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(start = 16.dp)
+                    )
+                }
+                if (emailFormatError != null) {
+                    Text(
+                        text = emailFormatError ?: "",
+                        color = Color.Red,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(start = 16.dp)
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(24.dp))
 
@@ -461,8 +502,21 @@ fun AddCentralOfficerDialog(
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(
                         onClick = {
-                            if (name.text.isNotBlank() && email.text.isNotBlank()) {
-                                // Pass both photoUri (new photo) and existing photo URL
+                            // --- Validation checks ---
+                            var valid = true
+                            if (name.text.isBlank()) {
+                                nameError = "Name cannot be empty"
+                                valid = false
+                            }
+                            if (email.text.isBlank()) {
+                                emailError = "Email cannot be empty"
+                                valid = false
+                            } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email.text).matches()) {
+                                emailFormatError = "Invalid email"
+                                valid = false
+                            }
+
+                            if (valid) {
                                 onAdd(name.text, email.text, photoUri, initialData?.photoUrl)
                             }
                         },
@@ -475,3 +529,4 @@ fun AddCentralOfficerDialog(
         containerColor = Color.White
     )
 }
+

@@ -54,7 +54,6 @@ fun OwnerNavGraph(
                     prefs.clearToken()
                     prefs.clearRole()
 
-                    // Use rootNavController here!
                     rootNavController.navigate(LoginRoute.Login.route) {
                         popUpTo(0) { inclusive = true }
                     }

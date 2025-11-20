@@ -14,6 +14,7 @@ import com.example.partsphere.presentation.owner.model.FactoryLocation
 import com.example.partsphere.presentation.owner.model.FactoryResponse
 import com.example.partsphere.presentation.owner.model.PlantHeadPaginatedResponse
 import com.example.partsphere.presentation.owner.model.PlantHeadResponse
+import com.example.partsphere.presentation.owner.model.Product
 import com.example.partsphere.presentation.owner.model.ProductResponse
 import com.example.partsphere.presentation.owner.model.SupervisorFactory
 import com.example.partsphere.presentation.owner.model.UnassignedFactoryItem
@@ -81,7 +82,6 @@ class OwnerRepository @Inject constructor(
     }
 
 
-    // OwnerRepository.kt
     suspend fun updateFactory(
         factoryId: Int,
         request: UpdateFactoryRequest
@@ -176,7 +176,6 @@ class OwnerRepository @Inject constructor(
     suspend fun getAllCentralOfficers(loadAll: Boolean = false): Result<List<AddCOResponse>> =
         withContext(Dispatchers.IO) {
             try {
-                // When we want all data (initial load), reset pagination
                 if (loadAll) {
                     currentPage = 0
                     isLastPage = false
@@ -184,7 +183,6 @@ class OwnerRepository @Inject constructor(
 
                 val allOfficers = mutableListOf<AddCOResponse>()
 
-                // Load all pages only once during app start
                 if (loadAll) {
                     do {
                         val response = api.getAllCentralOfficers(currentPage, pageSize)
@@ -310,6 +308,9 @@ class OwnerRepository @Inject constructor(
                 if (loadAll) {
                     do {
                         val response = api.getAllChiefSupervisors(currentChiefPage, chiefPageSize)
+                        Log.d("GetChiefSupervisors", "Response code: ${response.code()}")
+                        Log.d("GetChiefSupervisors", "Response body: ${response.body()}")
+                        Log.d("GetChiefSupervisors", "Error body: ${response.errorBody()?.string()}")
                         if (response.isSuccessful && response.body() != null) {
                             val paginatedResponse = response.body()!!
                             allChiefs.addAll(paginatedResponse.content)
@@ -366,7 +367,7 @@ class OwnerRepository @Inject constructor(
     suspend fun addChiefSupervisor(
         name: String,
         email: String,
-        factoryId: Long, // changed from Int to Long
+        factoryId: Long,
         photoUri: Uri?
     ): Result<AddChiefSupervisorResponse> = withContext(Dispatchers.IO) {
         try {
@@ -392,6 +393,9 @@ class OwnerRepository @Inject constructor(
                 rolePart,
                 photoPart
             )
+            Log.d("AddChiefSupervisor", "Response code: ${response.code()}")
+            Log.d("AddChiefSupervisor", "Response body: ${response.body()?.toString()}")
+            Log.d("AddChiefSupervisor", "Error body: ${response.errorBody()?.string()}")
 
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!)
@@ -464,17 +468,15 @@ class OwnerRepository @Inject constructor(
             val factoryBody = factoryId.toString().toRequestBody("text/plain".toMediaTypeOrNull())
 
             val photoPart: MultipartBody.Part? = photoUri?.let { uri ->
-                try {
-                    val inputStream = context.contentResolver.openInputStream(uri)
-                    val file = File(context.cacheDir, "plant_head_${System.currentTimeMillis()}.jpg")
-                    file.outputStream().use { outputStream ->
-                        inputStream?.copyTo(outputStream)
-                    }
-                    val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
-                    MultipartBody.Part.createFormData("photo", file.name, requestFile)
-                } catch (e: Exception) {
-                    null
+                val inputStream = context.contentResolver.openInputStream(uri)
+                val tempFile =
+                    File(context.cacheDir, "temp_photo_${System.currentTimeMillis()}.jpg")
+                inputStream?.use { input ->
+                    tempFile.outputStream().use { output -> input.copyTo(output) }
                 }
+
+                val requestFile = tempFile.asRequestBody("image/*".toMediaTypeOrNull())
+                MultipartBody.Part.createFormData("photo", tempFile.name, requestFile)
             }
 
             val response = api.addPlantHead(
@@ -504,6 +506,59 @@ class OwnerRepository @Inject constructor(
             } else {
                 Result.failure(Exception("Failed to delete user: ${response.code()}"))
             }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun deleteChiefSupervisor(id: Int): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            val response = api.deleteChiefSupervisor(id)
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                Result.failure(Exception(response.errorBody()?.string() ?: "Unknown error"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun createProduct(
+        name: String,
+        imageUri: Uri?,
+        quantity: Int,
+        categoryId: Int,
+        price: Double,
+        description: String
+    ): Result<Product> = withContext(Dispatchers.IO) {
+        try {
+            val namePart = name.toRequestBody("text/plain".toMediaTypeOrNull())
+            val quantityPart = quantity.toString().toRequestBody("text/plain".toMediaTypeOrNull())
+            val categoryPart = categoryId.toString().toRequestBody("text/plain".toMediaTypeOrNull())
+            val pricePart = price.toString().toRequestBody("text/plain".toMediaTypeOrNull())
+            val descPart = description.toRequestBody("text/plain".toMediaTypeOrNull())
+
+            val imagePart: MultipartBody.Part? = imageUri?.let { uri ->
+                val inputStream = context.contentResolver.openInputStream(uri)
+                val tempFile =
+                    File(context.cacheDir, "temp_photo_${System.currentTimeMillis()}.jpg")
+                inputStream?.use { input ->
+                    tempFile.outputStream().use { output -> input.copyTo(output) }
+                }
+
+                val requestFile = tempFile.asRequestBody("image/*".toMediaTypeOrNull())
+                MultipartBody.Part.createFormData("photo", tempFile.name, requestFile)
+            }
+
+            val response = api.createProduct(namePart, imagePart, quantityPart, categoryPart, pricePart, descPart)
+
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                Result.failure(Exception(response.errorBody()?.string() ?: "Unknown error"))
+            }
+
         } catch (e: Exception) {
             Result.failure(e)
         }

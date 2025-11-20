@@ -1,5 +1,8 @@
 package com.example.partsphere.presentation.login_screen.viewmodel
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.partsphere.presentation.login_screen.AuthState
@@ -18,12 +21,37 @@ class LoginViewModel @Inject constructor(
     private val repository: LoginRepository,
     private val prefs: PreferenceManager
 ) : ViewModel() {
+
     fun getPrefs(): PreferenceManager = prefs
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState: StateFlow<AuthState> = _authState
 
+
+    var fieldErrors by mutableStateOf<Map<String, String>>(emptyMap())
+        private set
+
+    // Function to validate email and password
+    fun validateInputs(): Boolean {
+        val errors = mutableMapOf<String, String>()
+
+        if (email.isBlank()) errors["email"] = "Email is required"
+        else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches())
+            errors["email"] = "Enter a valid email"
+
+        if (password.isBlank()) errors["password"] = "Password is required"
+        else if (password.length < 6) errors["password"] = "Password must be at least 6 characters"
+
+        fieldErrors = errors
+        return errors.isEmpty()
+    }
+
     fun login(email: String, password: String) {
+        this.email = email
+        this.password = password
+
+        if (!validateInputs()) return
+
         viewModelScope.launch {
             _authState.value = AuthState.Loading
             try {
@@ -38,10 +66,7 @@ class LoginViewModel @Inject constructor(
                             body.message ?: "Login successful",
                             role = body.role
                         )
-                    }
-
-
-                    else {
+                    } else {
                         _authState.value = AuthState.Error(body?.error ?: "Unknown error")
                     }
                 } else {
@@ -54,4 +79,7 @@ class LoginViewModel @Inject constructor(
             }
         }
     }
+
+    var email by mutableStateOf("")
+    var password by mutableStateOf("")
 }

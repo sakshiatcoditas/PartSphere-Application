@@ -9,6 +9,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.ui.res.painterResource
+import com.example.partsphere.R
+
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,6 +20,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -240,7 +244,7 @@ fun SearchAndFilterRow(
                 modifier = Modifier
                     .size(56.dp)
                     .background(
-                        color = if (hasActiveFilters) Color.Black else Color.White,
+                        color = Color.White, // White background
                         shape = RoundedCornerShape(14.dp)
                     )
                     .border(
@@ -250,12 +254,14 @@ fun SearchAndFilterRow(
                     )
             ) {
                 Icon(
-                    imageVector = Icons.Filled.Home,
+                    painter = painterResource(id = R.drawable.filter), // Use your filter drawable
                     contentDescription = "Filter by location",
-                    tint = if (hasActiveFilters) Color.White else Color.Black,
+                    tint = Color.Black, // Icon remains black
                     modifier = Modifier.size(24.dp)
                 )
             }
+
+
         }
 
         DropdownMenu(

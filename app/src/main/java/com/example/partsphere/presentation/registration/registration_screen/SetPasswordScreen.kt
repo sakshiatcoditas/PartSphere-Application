@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.sp
 import com.example.partsphere.ui.theme.Black
 import com.example.partsphere.utils.RegistrationState
 import com.example.partsphere.utils.Field
-import com.example.partsphere.viewmodel.RegistrationViewModel
+import com.example.partsphere.presentation.registration.viewmodel.RegistrationViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

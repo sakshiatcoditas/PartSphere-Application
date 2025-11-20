@@ -37,15 +37,6 @@ import com.example.partsphere.presentation.owner.model.AddChiefSupervisorRespons
 import com.example.partsphere.presentation.owner.ui.components.SearchBar
 import com.example.partsphere.presentation.owner.viewmodel.ManageFactoryViewModel
 
-// ---------------- DATA CLASS ----------------
-//data class ChiefSupervisor(
-//    val name: String,
-//    val email: String,
-//    val designation: String,
-//    val factory: String,
-//    val photoUri: Uri? = null
-//)
-
 // ---------------- CHIEF SUPERVISOR SCREEN ----------------
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -116,21 +107,13 @@ fun ChiefSupervisorScreen(
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
+                    ) { CircularProgressIndicator() }
                 }
                 uiState.error != null -> {
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = uiState.error ?: "Something went wrong",
-                            color = Color.Red,
-                            fontSize = 16.sp
-                        )
-                    }
+                    ) { Text(uiState.error ?: "Something went wrong", color = Color.Red, fontSize = 16.sp) }
                 }
                 else -> {
                     LazyColumn(
@@ -147,9 +130,10 @@ fun ChiefSupervisorScreen(
                                     showDialog = true
                                 },
                                 onDelete = {
-                                    // Delete logic to implement later
+                                    viewModel.deleteChiefSupervisor(supervisor.id)
                                 }
                             )
+
                         }
 
                         if (uiState.isLoading && uiState.supervisors.isNotEmpty()) {
@@ -159,9 +143,7 @@ fun ChiefSupervisorScreen(
                                         .fillMaxWidth()
                                         .padding(16.dp),
                                     contentAlignment = Alignment.Center
-                                ) {
-                                    CircularProgressIndicator()
-                                }
+                                ) { CircularProgressIndicator() }
                             }
                         }
                     }
@@ -179,18 +161,17 @@ fun ChiefSupervisorScreen(
                 .padding(20.dp),
             containerColor = Color.Black,
             shape = CircleShape
-        ) {
-            Icon(Icons.Default.Add, contentDescription = "Add Supervisor", tint = Color.White)
-        }
+        ) { Icon(Icons.Default.Add, contentDescription = "Add Supervisor", tint = Color.White) }
     }
 
     if (showDialog) {
         AddChiefSupervisorDialog(
             viewModel = viewModel,
-            initialData = currentEditingSupervisor, // Pass the supervisor object directly
+            initialData = currentEditingSupervisor,
             onDismiss = { showDialog = false }
         )
     }
+
 
 }
 
@@ -202,15 +183,12 @@ fun AddChiefSupervisorDialog(
     onDismiss: () -> Unit
 ) {
     val factories by viewModel.supervisorFactories.collectAsState()
-// API-fetched factories
 
     var name by remember { mutableStateOf(TextFieldValue(initialData?.username ?: "")) }
     var email by remember { mutableStateOf(TextFieldValue(initialData?.email ?: "")) }
-    var designation by remember { mutableStateOf(initialData?.role ?: "") }
-    var designationExpanded by remember { mutableStateOf(false) }
     var selectedFactory by remember { mutableStateOf(initialData?.factoryName ?: "") }
     var factoryExpanded by remember { mutableStateOf(false) }
-    var photoUri by remember { mutableStateOf(initialData?.photo?.let { Uri.parse(it) }) }
+    var photoUri by remember { mutableStateOf<Uri?>(null) } // for new upload
 
     var isLoading by remember { mutableStateOf(false) }
 
@@ -240,21 +218,32 @@ fun AddChiefSupervisorDialog(
                         .clickable { launcher.launch("image/*") },
                     contentAlignment = Alignment.Center
                 ) {
-                    if (photoUri != null) {
-                        Image(
-                            painter = rememberAsyncImagePainter(photoUri),
-                            contentDescription = "Selected Photo",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    } else {
-                        Text("Upload Photo", fontSize = 14.sp, color = Color.Black)
+                    when {
+                        photoUri != null -> {
+                            Image(
+                                painter = rememberAsyncImagePainter(photoUri),
+                                contentDescription = "Selected Photo",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                        initialData?.photo != null -> {
+                            val imageUrl = initialData.photo + "?t=${System.currentTimeMillis()}"
+                            Image(
+                                painter = rememberAsyncImagePainter(imageUrl),
+                                contentDescription = "Existing Photo",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                        else -> {
+                            Text("Upload Photo", color = Color.Black, fontSize = 14.sp)
+                        }
                     }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Name & Email
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
@@ -273,35 +262,6 @@ fun AddChiefSupervisorDialog(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Designation Dropdown (fixed)
-                ExposedDropdownMenuBox(
-                    expanded = designationExpanded,
-                    onExpandedChange = { designationExpanded = !designationExpanded }
-                ) {
-                    OutlinedTextField(
-                        value = designation,
-                        onValueChange = {},
-                        label = { Text("Designation") },
-                        readOnly = true,
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(designationExpanded) },
-                        modifier = Modifier.fillMaxWidth().menuAnchor(),
-                    )
-                    ExposedDropdownMenu(
-                        expanded = designationExpanded,
-                        onDismissRequest = { designationExpanded = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text("Chief-Supervisor") },
-                            onClick = {
-                                designation = "Chief-Supervisor"
-                                designationExpanded = false
-                            }
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
                 // Factory Dropdown
                 ExposedDropdownMenuBox(
                     expanded = factoryExpanded,
@@ -313,7 +273,7 @@ fun AddChiefSupervisorDialog(
                         label = { Text("Factory Associated") },
                         readOnly = true,
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(factoryExpanded) },
-                        modifier = Modifier.fillMaxWidth().menuAnchor(),
+                        modifier = Modifier.fillMaxWidth().menuAnchor()
                     )
                     ExposedDropdownMenu(
                         expanded = factoryExpanded,
@@ -333,7 +293,6 @@ fun AddChiefSupervisorDialog(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Buttons
                 Row(
                     horizontalArrangement = Arrangement.End,
                     modifier = Modifier.fillMaxWidth()
@@ -352,19 +311,21 @@ fun AddChiefSupervisorDialog(
                                     name.text,
                                     email.text,
                                     factoryId,
-                                    selectedFactory, // pass the factory name here
+                                    selectedFactory,
                                     photoUri
                                 ) { success, message ->
                                     isLoading = false
-                                    if (success) onDismiss()
-                                    else println("Add Supervisor failed: $message")
+                                    if (success) {
+                                        // Refresh list to get updated photo
+                                        viewModel.fetchChiefSupervisors(loadMore = false)
+                                        onDismiss()
+                                    } else println("Add Supervisor failed: $message")
                                 }
                             }
-
                         }
                     ) {
                         if (isLoading) CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White)
-                        else Text("Add")
+                        else Text("Save")
                     }
                 }
             }
@@ -373,6 +334,7 @@ fun AddChiefSupervisorDialog(
         containerColor = Color.White
     )
 }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChiefSupervisorCard(
@@ -384,7 +346,9 @@ fun ChiefSupervisorCard(
     var showDeleteDialog by remember { mutableStateOf(false) }
 
     val scale by animateFloatAsState(if (isPressed) 0.95f else 1f, tween(100))
-    val overlayColor by animateColorAsState(if (isPressed) Color(0x33000000) else Color.Transparent, tween(150))
+    val overlayColor by animateColorAsState(
+        if (isPressed) Color(0x33000000) else Color.Transparent, tween(150)
+    )
 
     Card(
         modifier = Modifier
@@ -412,9 +376,9 @@ fun ChiefSupervisorCard(
                         .background(Color.LightGray, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (supervisor.photo != null) {
+                    if (!supervisor.photo.isNullOrEmpty()) {
                         Image(
-                            painter = rememberAsyncImagePainter(Uri.parse(supervisor.photo)),
+                            painter = rememberAsyncImagePainter(supervisor.photo),
                             contentDescription = "Supervisor Photo",
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize()
@@ -430,7 +394,11 @@ fun ChiefSupervisorCard(
                     Text(supervisor.username, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     Text("Email: ${supervisor.email}", fontSize = 14.sp, color = Color.DarkGray)
                     Text("Designation: ${supervisor.role}", fontSize = 14.sp, color = Color.DarkGray)
-                    Text("Factory: ${supervisor.factoryName ?: "Unassigned"}", fontSize = 14.sp, color = Color.DarkGray)
+                    Text(
+                        "Factory: ${supervisor.factoryName ?: "Unassigned"}",
+                        fontSize = 14.sp,
+                        color = Color.DarkGray
+                    )
                 }
             }
 
@@ -462,7 +430,7 @@ fun ChiefSupervisorCard(
             text = { Text("Are you sure you want to delete ${supervisor.username}?") },
             confirmButton = {
                 TextButton(onClick = {
-                    onDelete()
+                    onDelete() // Call the lambda from the screen
                     showDeleteDialog = false
                 }) { Text("Delete", color = Color.Red) }
             },
@@ -472,3 +440,6 @@ fun ChiefSupervisorCard(
         )
     }
 }
+
+
+

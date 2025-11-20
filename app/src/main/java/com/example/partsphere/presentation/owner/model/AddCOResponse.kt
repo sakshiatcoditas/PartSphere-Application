@@ -5,5 +5,5 @@ data class AddCOResponse(
     val username: String,
     val email: String,
     val role: String,
-    val photo: String?=null // null or URL
+    val photo: String?=null
 )

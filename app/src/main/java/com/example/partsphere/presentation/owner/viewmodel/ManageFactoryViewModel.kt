@@ -430,27 +430,27 @@ class ManageFactoryViewModel @Inject constructor(
         name: String,
         email: String,
         factoryId: Long,
-        factoryName: String, // Add this parameter
+        factoryName: String, // keep factoryName for display
         photoUri: Uri?,
         onResult: (Boolean, String) -> Unit
     ) {
         viewModelScope.launch {
             _isAddingSupervisor.value = true
+
             val result = repository.addChiefSupervisor(name, email, factoryId, photoUri)
 
             result.onSuccess { supervisor ->
-                // Inject factoryName into the supervisor object
-                val supervisorWithFactory = supervisor.copy(factoryName = factoryName)
-                _chiefUiState.update {
-                    it.copy(supervisors = it.supervisors + supervisorWithFactory)
-                }
+                // Instead of appending manually, fetch the full list to get the photo
+                fetchChiefSupervisors(loadMore = false)
                 onResult(true, "Supervisor added successfully")
             }.onFailure { e ->
                 onResult(false, e.message ?: "Failed to add supervisor")
             }
+
             _isAddingSupervisor.value = false
         }
     }
+
 
 
     private val _productUiState = MutableStateFlow(ProductUiState())
@@ -600,6 +600,61 @@ class ManageFactoryViewModel @Inject constructor(
             }
         }
     }
+
+    private val _isDeletingSupervisor = MutableStateFlow(false)
+    val isDeletingSupervisor: StateFlow<Boolean> = _isDeletingSupervisor.asStateFlow()
+
+    fun deleteChiefSupervisor(supervisorId: Int) {
+        viewModelScope.launch {
+            _isDeletingSupervisor.value = true
+
+            val result = repository.deleteChiefSupervisor(supervisorId)
+
+            result.onSuccess { message ->
+                // Remove the deleted supervisor from the current list
+                _chiefUiState.update { currentState ->
+                    currentState.copy(
+                        supervisors = currentState.supervisors.filter { it.id != supervisorId }
+                    )
+                }
+                println("Delete successful: $message")
+            }.onFailure { e ->
+                println("Delete failed: ${e.message}")
+            }
+
+            _isDeletingSupervisor.value = false
+        }
+    }
+
+    private val _productuiState = MutableStateFlow(ProductUiState())
+    val productuiState: StateFlow<ProductUiState> = _productuiState.asStateFlow()
+
+    fun createProduct(
+        name: String,
+        imageUri: Uri?,
+        quantity: Int,
+        categoryId: Int,
+        price: Double,
+        description: String
+    ) {
+        viewModelScope.launch {
+            _productuiState.update { it.copy(isLoading = true, error = null) }
+
+            val result = repository.createProduct(name, imageUri, quantity, categoryId, price, description)
+
+            result.onSuccess { product ->
+                _productuiState.update { current ->
+                    current.copy(
+                        isLoading = false,
+                        products = current.products + product // append new product
+                    )
+                }
+            }.onFailure { e ->
+                _productuiState.update { it.copy(isLoading = false, error = e.message) }
+            }
+        }
+    }
+
 
 
 }

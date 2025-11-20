@@ -1,5 +1,8 @@
 package com.example.partsphere.presentation.owner.ui
 
+import androidx.compose.ui.res.painterResource
+import com.example.partsphere.R
+
 import android.util.Log
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -118,11 +121,12 @@ fun ManageFactoryScreen(viewModel: ManageFactoryViewModel = hiltViewModel()) {
                     colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Transparent)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Home,
+                        painter = painterResource(id = R.drawable.filter),
                         contentDescription = "Filter",
                         tint = if (selectedLocations.isNotEmpty()) Color.Black else Color(0xFF333333),
                         modifier = Modifier.size(24.dp)
                     )
+
                 }
             }
 

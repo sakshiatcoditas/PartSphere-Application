@@ -12,7 +12,7 @@ fun LoginNavGraph(
 ) {
     val loginViewModel: LoginViewModel = hiltViewModel()
 
-    // We have not created  a nested NavHost - just show LoginScreen directly
+    // We have not created  a nested NavHost - just showing the  LoginScreen directly
     // The NavHost is already managed by RootNavGraph
     LoginScreen(
         viewModel = loginViewModel,
@@ -22,7 +22,7 @@ fun LoginNavGraph(
                 launchSingleTop = true
             }
         },
-        onNavigateToForgotPassword = { /* TODO */ },
+        onNavigateToForgotPassword = { /*TODO  */ },
         onLoginSuccess = { role ->
             when (role.uppercase()) {
                 "OWNER" -> navController.navigate("owner_graph") {

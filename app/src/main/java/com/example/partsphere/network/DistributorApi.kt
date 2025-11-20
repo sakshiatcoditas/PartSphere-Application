@@ -20,6 +20,7 @@ import com.example.partsphere.presentation.owner.model.FactoryResponse
 import com.example.partsphere.presentation.owner.model.PaginatedCOResponse
 import com.example.partsphere.presentation.owner.model.PlantHeadPaginatedResponse
 import com.example.partsphere.presentation.owner.model.PlantHeadResponse
+import com.example.partsphere.presentation.owner.model.Product
 import com.example.partsphere.presentation.owner.model.ProductResponse
 import com.example.partsphere.presentation.owner.model.UnassignedFactoryResponse
 import com.example.partsphere.presentation.owner.model.UnassignedPlantHead
@@ -191,14 +192,21 @@ interface DistributorApi {
         @Part("email") email: RequestBody,
         @Part("fcatory_id") factoryId: RequestBody,
         @Part("role") role: RequestBody,
-
         @Part photo: MultipartBody.Part?
     ): Response<AddChiefSupervisorResponse>
+
+
 
     @GET("/api/factory")
     suspend fun getAllFactoriesForSupervisor(
         @Query("type") type: String = "all"
     ): Response<FactoryDropdownResponse>
+
+
+        @DELETE("/api/users/chief-supervisor/{id}")
+        suspend fun deleteChiefSupervisor(@Path("id") id: Int): Response<String>
+
+
 
 
     //get all products
@@ -213,7 +221,16 @@ interface DistributorApi {
     suspend fun deleteProduct(@Path("id") id: Int): Response<DeleteProductResponse>
 
 
-
+    @Multipart
+    @POST("/api/product/newproduct")
+    suspend fun createProduct(
+        @Part("name") name: RequestBody,
+        @Part image: MultipartBody.Part?,
+        @Part("quantity") quantity: RequestBody,
+        @Part("categoryId") categoryId: RequestBody,
+        @Part("price") price: RequestBody,
+        @Part("description") description: RequestBody
+    ): Response<Product>
 
 
 }

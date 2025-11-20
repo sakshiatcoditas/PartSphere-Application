@@ -9,9 +9,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
-
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
@@ -206,6 +204,11 @@ fun AddProductScreen(
             Icon(Icons.Default.Add, contentDescription = "Add Product", tint = White)
         }
 
+        if (showAddProductDialog) {
+            AddProductDialog(viewModel = viewModel, onDismiss = { showAddProductDialog = false })
+        }
+
+
         //
         //
         //  Error message (if any)
@@ -237,7 +240,7 @@ fun AddProductScreen(
 
     //  Dialogs
     if (showAddProductDialog) {
-        AddProductDialog(onDismiss = { showAddProductDialog = false })
+        AddProductDialog(onDismiss = { showAddProductDialog = false }, viewModel = viewModel)
     }
 
     if (showFilterDialog) {
@@ -261,10 +264,13 @@ fun AddProductScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddProductDialog(onDismiss: () -> Unit) {
+fun AddProductDialog(
+    viewModel: ManageFactoryViewModel,
+    onDismiss: () -> Unit
+) {
     var productName by remember { mutableStateOf("") }
     var quantity by remember { mutableStateOf("") }
-    var category by remember { mutableStateOf("") }
+    var categoryId by remember { mutableStateOf(0) }
     var price by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var photoUri by remember { mutableStateOf<Uri?>(null) }
@@ -272,23 +278,26 @@ fun AddProductDialog(onDismiss: () -> Unit) {
     var categoryExpanded by remember { mutableStateOf(false) }
     val categories = listOf("Electronics", "Furniture", "Clothing", "Sports")
 
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
-        photoUri = it
-    }
+    val context = LocalContext.current
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = { photoUri = it }
+    )
+
+    // --------------- VALIDATION STATES ----------------
+    var productNameError by remember { mutableStateOf(false) }
+    var quantityError by remember { mutableStateOf(false) }
+    var priceError by remember { mutableStateOf(false) }
+    var descriptionError by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = {
-            Text(
-                text = "Add New Product",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
-            )
-        },
+        title = { Text("Add New Product", fontSize = 20.sp, fontWeight = FontWeight.Bold) },
         text = {
             Column(modifier = Modifier.fillMaxWidth()) {
 
-                // Product Image
+                // Image Picker
                 Box(
                     modifier = Modifier
                         .size(100.dp)
@@ -315,22 +324,36 @@ fun AddProductDialog(onDismiss: () -> Unit) {
                 // Product Name
                 OutlinedTextField(
                     value = productName,
-                    onValueChange = { productName = it },
+                    onValueChange = {
+                        productName = it
+                        productNameError = it.isBlank() || !it.matches(Regex("^[a-zA-Z\\s]*$"))
+                    },
                     label = { Text("Product Name") },
+                    isError = productNameError,
                     modifier = Modifier.fillMaxWidth(),
                     colors = outlinedFieldColors()
                 )
+                if (productNameError) {
+                    Text("Product Name must contain letters only", color = Color.Red, fontSize = 12.sp)
+                }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 // Quantity
                 OutlinedTextField(
                     value = quantity,
-                    onValueChange = { quantity = it },
+                    onValueChange = {
+                        quantity = it
+                        quantityError = it.isBlank() || !it.matches(Regex("^[0-9]*$"))
+                    },
                     label = { Text("Quantity") },
+                    isError = quantityError,
                     modifier = Modifier.fillMaxWidth(),
                     colors = outlinedFieldColors()
                 )
+                if (quantityError) {
+                    Text("Quantity must be a number", color = Color.Red, fontSize = 12.sp)
+                }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -340,30 +363,23 @@ fun AddProductDialog(onDismiss: () -> Unit) {
                     onExpandedChange = { categoryExpanded = !categoryExpanded }
                 ) {
                     OutlinedTextField(
-                        value = category,
+                        value = if (categoryId == 0) "" else categories[categoryId - 1],
                         onValueChange = {},
                         label = { Text("Category") },
                         readOnly = true,
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryExpanded)
-                        },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(categoryExpanded) },
                         modifier = Modifier
                             .menuAnchor()
                             .fillMaxWidth(),
                         colors = outlinedFieldColors()
                     )
-                    ExposedDropdownMenu(
-                        expanded = categoryExpanded,
-                        onDismissRequest = { categoryExpanded = false }
-                    ) {
-                        categories.forEach { option ->
-                            DropdownMenuItem(
-                                text = { Text(option) },
-                                onClick = {
-                                    category = option
-                                    categoryExpanded = false
-                                }
-                            )
+
+                    ExposedDropdownMenu(expanded = categoryExpanded, onDismissRequest = { categoryExpanded = false }) {
+                        categories.forEachIndexed { index, option ->
+                            DropdownMenuItem(text = { Text(option) }, onClick = {
+                                categoryId = index + 1
+                                categoryExpanded = false
+                            })
                         }
                     }
                 }
@@ -373,43 +389,77 @@ fun AddProductDialog(onDismiss: () -> Unit) {
                 // Price
                 OutlinedTextField(
                     value = price,
-                    onValueChange = { price = it },
+                    onValueChange = {
+                        price = it
+                        priceError = it.isBlank() || !it.matches(Regex("^[0-9]*\\.?[0-9]*$"))
+                    },
                     label = { Text("Price") },
+                    isError = priceError,
                     modifier = Modifier.fillMaxWidth(),
                     colors = outlinedFieldColors()
                 )
+                if (priceError) {
+                    Text("Price must be a valid number", color = Color.Red, fontSize = 12.sp)
+                }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 // Description
                 OutlinedTextField(
                     value = description,
-                    onValueChange = { description = it },
+                    onValueChange = {
+                        description = it
+                        descriptionError = it.isBlank() || !it.matches(Regex("^[a-zA-Z\\s]*$"))
+                    },
                     label = { Text("Description") },
+                    isError = descriptionError,
                     modifier = Modifier.fillMaxWidth(),
                     maxLines = 4,
                     colors = outlinedFieldColors()
                 )
+                if (descriptionError) {
+                    Text("Description must contain letters only", color = Color.Red, fontSize = 12.sp)
+                }
             }
         },
         confirmButton = {
             Button(
-                onClick = { onDismiss() },
+                onClick = {
+                    // Trigger final validation
+                    productNameError = productName.isBlank() || !productName.matches(Regex("^[a-zA-Z\\s]*$"))
+                    quantityError = quantity.isBlank() || !quantity.matches(Regex("^[0-9]*$"))
+                    priceError = price.isBlank() || !price.matches(Regex("^[0-9]*\\.?[0-9]*$"))
+                    descriptionError = description.isBlank() || !description.matches(Regex("^[a-zA-Z\\s]*$"))
+
+                    if (!productNameError && !quantityError && !priceError && !descriptionError && categoryId != 0) {
+                        viewModel.createProduct(
+                            name = productName,
+                            imageUri = photoUri,
+                            quantity = quantity.toInt(),
+                            categoryId = categoryId,
+                            price = price.toDouble(),
+                            description = description
+                        )
+                        Toast.makeText(context, "Product Created!", Toast.LENGTH_SHORT).show()
+                        onDismiss()
+                    } else {
+                        Toast.makeText(context, "Please correct the errors", Toast.LENGTH_SHORT).show()
+                    }
+                },
                 colors = ButtonDefaults.buttonColors(containerColor = Black)
             ) {
                 Text("Done", color = White)
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel", color = Black)
-            }
+            TextButton(onClick = onDismiss) { Text("Cancel", color = Black) }
         },
         containerColor = White,
         tonalElevation = 6.dp,
         shape = RoundedCornerShape(16.dp)
     )
 }
+
 
 //  Reusable function for consistent field color style
 @Composable

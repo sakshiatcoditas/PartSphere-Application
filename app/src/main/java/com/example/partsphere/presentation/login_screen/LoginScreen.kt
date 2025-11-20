@@ -29,9 +29,11 @@ fun LoginScreen(
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var emailError by remember { mutableStateOf<String?>(null) }
+    var passwordError by remember { mutableStateOf<String?>(null) }
+
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Collect auth state from ViewModel
     LaunchedEffect(Unit) {
         viewModel.authState.collectLatest { state ->
             when (state) {
@@ -69,36 +71,60 @@ fun LoginScreen(
             // Email Input
             OutlinedTextField(
                 value = email,
-                onValueChange = { email = it },
+                onValueChange = {
+                    email = it
+                    emailError = null
+                },
                 label = { Text("Email", color = Color.Black) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
+                isError = emailError != null,
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Black,
-                    unfocusedBorderColor = Black,
+                    focusedBorderColor = if(emailError != null) Color.Red else Black,
+                    unfocusedBorderColor = if(emailError != null) Color.Red else Black,
                     focusedTextColor = Black,
                     unfocusedTextColor = Black,
                     cursorColor = Black
                 )
             )
+            if (emailError != null) {
+                Text(
+                    text = emailError ?: "",
+                    color = Color.Red,
+                    fontSize = 12.sp,
+                    modifier = Modifier.align(Alignment.Start)
+                )
+            }
 
             Spacer(Modifier.height(16.dp))
 
             // Password Input
             OutlinedTextField(
                 value = password,
-                onValueChange = { password = it },
+                onValueChange = {
+                    password = it
+                    passwordError = null
+                },
                 label = { Text("Password", color = Color.Black) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
+                isError = passwordError != null,
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Black,
-                    unfocusedBorderColor = Black,
+                    focusedBorderColor = if(passwordError != null) Color.Red else Black,
+                    unfocusedBorderColor = if(passwordError != null) Color.Red else Black,
                     focusedTextColor = Black,
                     unfocusedTextColor = Black,
                     cursorColor = Black
                 )
             )
+            if (passwordError != null) {
+                Text(
+                    text = passwordError ?: "",
+                    color = Color.Red,
+                    fontSize = 12.sp,
+                    modifier = Modifier.align(Alignment.Start)
+                )
+            }
 
             Spacer(Modifier.height(8.dp))
 
@@ -117,7 +143,28 @@ fun LoginScreen(
 
             // Login Button
             Button(
-                onClick = { viewModel.login(email, password) },
+                onClick = {
+                    var valid = true
+                    if (email.isBlank()) {
+                        emailError = "Email cannot be empty"
+                        valid = false
+                    } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                        emailError = "Invalid email format"
+                        valid = false
+                    }
+
+                    if (password.isBlank()) {
+                        passwordError = "Password cannot be empty"
+                        valid = false
+                    } else if (password.length < 6) {
+                        passwordError = "Password must be at least 6 characters"
+                        valid = false
+                    }
+
+                    if (valid) {
+                        viewModel.login(email, password)
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
@@ -133,7 +180,7 @@ fun LoginScreen(
 
             Spacer(Modifier.height(32.dp))
 
-            // ---------------- OR ----------------
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -159,7 +206,6 @@ fun LoginScreen(
             Spacer(Modifier.height(16.dp))
 
             // Signup as Distributor
-
             TextButton(
                 onClick = { onNavigateToRegister() },
                 modifier = Modifier.fillMaxWidth()
@@ -183,11 +229,6 @@ fun LoginScreen(
                 }
             }
 
-
-
-
-
-
             // Loading Indicator
             if (viewModel.authState.collectAsState().value is AuthState.Loading) {
                 Spacer(Modifier.height(24.dp))
@@ -196,3 +237,4 @@ fun LoginScreen(
         }
     }
 }
+

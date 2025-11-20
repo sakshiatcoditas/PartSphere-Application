@@ -8,7 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.partsphere.presentation.login_screen.navigation.LoginRoute
 import com.example.partsphere.presentation.registration.registration_screen.*
-import com.example.partsphere.viewmodel.RegistrationViewModel
+import com.example.partsphere.presentation.registration.viewmodel.RegistrationViewModel
 
 @Composable
 fun RegistrationNavGraph(rootNavController: NavHostController) {

@@ -225,6 +225,10 @@ fun AddPlantHeadDialog(
     var factoryExpanded by remember { mutableStateOf(false) }
     var photoUri by remember { mutableStateOf(initialData?.photoUri) }
 
+    // Validation states
+    var nameError by remember { mutableStateOf(false) }
+    var emailError by remember { mutableStateOf(false) }
+
     val designations = listOf("Plant-Head", "Chief-Supervisor")
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
@@ -266,20 +270,43 @@ fun AddPlantHeadDialog(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Name & Email
+                // Name Field
+
                 OutlinedTextField(
                     value = name,
-                    onValueChange = { name = it },
+                    onValueChange = { input ->
+                        name = input
+                        // Validation: must be letters and spaces only, and not blank
+                        nameError = input.text.isBlank() || !input.text.matches(Regex("^[a-zA-Z\\s]*$"))
+                    },
                     label = { Text("Full Name") },
+                    isError = nameError,
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                if (nameError) {
+                    Text("Full Name must contain letters only", color = Color.Red, fontSize = 12.sp)
+                }
+
+
+
                 Spacer(modifier = Modifier.height(8.dp))
+
+                // Email Field
                 OutlinedTextField(
                     value = email,
-                    onValueChange = { email = it },
+                    onValueChange = {
+                        email = it
+                        emailError = it.text.isBlank() || !android.util.Patterns.EMAIL_ADDRESS.matcher(it.text).matches()
+                    },
                     label = { Text("Email") },
+                    isError = emailError,
                     modifier = Modifier.fillMaxWidth()
                 )
+                if (emailError) {
+                    Text("Enter a valid email", color = Color.Red, fontSize = 12.sp)
+                }
+
                 Spacer(modifier = Modifier.height(8.dp))
 
                 // Designation Dropdown
@@ -353,9 +380,12 @@ fun AddPlantHeadDialog(
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(
                         onClick = {
-                            if (name.text.isNotBlank() && email.text.isNotBlank() &&
-                                designation.isNotBlank() && selectedFactory.isNotBlank()
-                            ) {
+                            // Trigger validation
+                            nameError = name.text.isBlank()
+                            emailError = email.text.isBlank() ||
+                                    !android.util.Patterns.EMAIL_ADDRESS.matcher(email.text).matches()
+
+                            if (!nameError && !emailError) {
                                 onAdd(name.text, email.text, designation, selectedFactory, photoUri)
                             }
                         }
@@ -369,6 +399,7 @@ fun AddPlantHeadDialog(
         containerColor = Color.White
     )
 }
+
 
 // ---------------- PLANT HEAD CARD ----------------
 @OptIn(ExperimentalMaterial3Api::class)
