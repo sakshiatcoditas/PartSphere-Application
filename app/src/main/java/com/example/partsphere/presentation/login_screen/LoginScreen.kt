@@ -17,6 +17,9 @@ import kotlinx.coroutines.flow.collectLatest
 import com.example.partsphere.R
 import com.example.partsphere.ui.theme.Black
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import com.example.partsphere.presentation.login_screen.viewmodel.LoginViewModel
 
@@ -99,6 +102,8 @@ fun LoginScreen(
             Spacer(Modifier.height(16.dp))
 
             // Password Input
+            var passwordVisible by remember { mutableStateOf(false) } // Track visibility
+
             OutlinedTextField(
                 value = password,
                 onValueChange = {
@@ -109,6 +114,18 @@ fun LoginScreen(
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 isError = passwordError != null,
+                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                        Icon(
+                            painter = painterResource(
+                                id = if (passwordVisible) R.drawable.visibility else R.drawable.visibility_off
+                            ),
+                            contentDescription = if (passwordVisible) "Hide password" else "Show password",
+                            tint = Color.Gray
+                        )
+                    }
+                },
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = if(passwordError != null) Color.Red else Black,
                     unfocusedBorderColor = if(passwordError != null) Color.Red else Black,
@@ -117,6 +134,7 @@ fun LoginScreen(
                     cursorColor = Black
                 )
             )
+
             if (passwordError != null) {
                 Text(
                     text = passwordError ?: "",
@@ -125,6 +143,7 @@ fun LoginScreen(
                     modifier = Modifier.align(Alignment.Start)
                 )
             }
+
 
             Spacer(Modifier.height(8.dp))
 

@@ -100,9 +100,17 @@ fun ProfileScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 20.dp, vertical = 40.dp),
+                .padding(horizontal = 20.dp)
+                .padding(top = 40.dp), // slightly shifted down from top
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Text(
+                text = "Profile",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black,
+                modifier = Modifier.padding(bottom = 24.dp)
+            )
             // Avatar Circle
             Box(
                 modifier = Modifier

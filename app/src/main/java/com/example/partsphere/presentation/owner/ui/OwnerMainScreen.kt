@@ -28,8 +28,10 @@ fun OwnerMainScreen(rootNavController: NavHostController) {
                     OwnerBottomNavItem.Reports,
                     OwnerBottomNavItem.ManageEmployee,
                     OwnerBottomNavItem.ManageFactory,
+
+                    OwnerBottomNavItem.AddProduct,
                     OwnerBottomNavItem.Profile,
-                    OwnerBottomNavItem.AddProduct
+
                 ).forEach { item ->
                     NavigationBarItem(
                         selected = currentRoute == item.route,

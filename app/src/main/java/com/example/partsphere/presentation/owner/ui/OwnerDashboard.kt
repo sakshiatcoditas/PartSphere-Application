@@ -5,8 +5,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-
-
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -16,30 +14,28 @@ import com.example.partsphere.presentation.login_screen.navigation.LoginRoute
 import com.example.partsphere.presentation.owner.navigation.OwnerBottomNavItem
 import com.example.partsphere.presentation.owner.navigation.OwnerNavGraph
 
-
-
-
-
-//-------------------- This has the Scaffold of the Homescreen just this -----------------------
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
- fun OwnerDashboardScreen(rootNavController: NavHostController) {
+fun OwnerDashboardScreen(rootNavController: NavHostController) {
 
     val bottomNavController = rememberNavController()
     val navBackStackEntry by bottomNavController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
     Scaffold(
-        modifier = Modifier.systemBarsPadding(),
         bottomBar = {
-            NavigationBar {
+            NavigationBar(
+                containerColor = Color.Black,
+                contentColor = Color.White
+            ) {
                 listOf(
                     OwnerBottomNavItem.Home,
                     OwnerBottomNavItem.Reports,
                     OwnerBottomNavItem.ManageEmployee,
                     OwnerBottomNavItem.ManageFactory,
+
+                    OwnerBottomNavItem.AddProduct,
                     OwnerBottomNavItem.Profile,
-                    OwnerBottomNavItem.AddProduct
                 ).forEach { item ->
                     NavigationBarItem(
                         selected = currentRoute == item.route,
@@ -55,7 +51,14 @@ import com.example.partsphere.presentation.owner.navigation.OwnerNavGraph
                                 contentDescription = item.label
                             )
                         },
-                        label = { Text(item.label) }
+                        label = { Text(item.label) },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = Color.White,
+                            selectedTextColor = Color.White,
+                            unselectedIconColor = Color.Gray,
+                            unselectedTextColor = Color.Gray,
+                            indicatorColor = Color(0xFF333333)
+                        )
                     )
                 }
             }

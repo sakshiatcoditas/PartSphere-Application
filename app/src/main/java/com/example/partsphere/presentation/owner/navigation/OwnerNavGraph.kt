@@ -47,6 +47,13 @@ fun OwnerNavGraph(
 
         composable(OwnerBottomNavItem.ManageFactory.route) { ManageFactoryScreen() }
 
+
+
+        composable("central_officers") { CentralOfficerScreen(onBackClick = { navController.popBackStack() }) }
+        composable("plant_head") { PlantHeadScreen(onBackClick = { navController.popBackStack() }) }
+        composable("chief_supervisor") { ChiefSupervisorScreen(onBackClick = { navController.popBackStack() }) }
+        composable(OwnerBottomNavItem.AddProduct.route) { AddProductScreen() }
+
         composable(OwnerBottomNavItem.Profile.route) {
             ProfileScreen(
                 context = context,
@@ -60,10 +67,5 @@ fun OwnerNavGraph(
                 }
             )
         }
-
-        composable("central_officers") { CentralOfficerScreen(onBackClick = { navController.popBackStack() }) }
-        composable("plant_head") { PlantHeadScreen(onBackClick = { navController.popBackStack() }) }
-        composable("chief_supervisor") { ChiefSupervisorScreen(onBackClick = { navController.popBackStack() }) }
-        composable(OwnerBottomNavItem.AddProduct.route) { AddProductScreen() }
     }
 }

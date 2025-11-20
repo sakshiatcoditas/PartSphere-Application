@@ -28,11 +28,13 @@ sealed class OwnerBottomNavItem(
         "manage_factory",
         R.drawable.factory,
         "Factory")
-    object Profile : OwnerBottomNavItem("profile"
-        , R.drawable.profile, "Profile")
 
     object AddProduct : OwnerBottomNavItem(
         "add_product",
         R.drawable.addproducts, "Products")
+
+    object Profile : OwnerBottomNavItem("profile"
+        , R.drawable.profile, "Profile")
+
 }
 

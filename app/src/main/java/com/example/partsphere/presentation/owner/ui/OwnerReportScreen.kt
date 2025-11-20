@@ -166,7 +166,7 @@ fun ReportsTopBar() {
         title = {
             Text(
                 text = "Reports",
-                fontSize = 22.sp,
+                fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black
             )
