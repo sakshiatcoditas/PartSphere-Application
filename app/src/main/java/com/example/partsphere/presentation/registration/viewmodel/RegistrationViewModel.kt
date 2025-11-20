@@ -8,7 +8,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.partsphere.model.UserRegistrationData
-import com.example.partsphere.repository.DistributorRepository
+import com.example.partsphere.presentation.registration.repository.DistributorRepository
 import com.example.partsphere.utils.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch

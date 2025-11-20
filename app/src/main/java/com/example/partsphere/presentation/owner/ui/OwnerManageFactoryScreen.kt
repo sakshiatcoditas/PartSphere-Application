@@ -46,15 +46,11 @@ fun ManageFactoryScreen(viewModel: ManageFactoryViewModel = hiltViewModel()) {
     var showFilterDialog by remember { mutableStateOf(false) }
     var showAddDialog by remember { mutableStateOf(false) }
 
-    // --- Collect state from ViewModel ---
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.errorMessage.collectAsState()
-
-    // Mutable list for UI updates (update/delete)
-
     val factoriesState by viewModel.factories.collectAsState()
 
-    //  Step 2: Map them into your UI model (FactoryItem)
+    // Map API model to UI model
     val factories = factoriesState.map { apiItem ->
         FactoryItem(
             id = apiItem.id,
@@ -64,7 +60,6 @@ fun ManageFactoryScreen(viewModel: ManageFactoryViewModel = hiltViewModel()) {
         )
     }
 
-    // Step 3: Fetch data once when screen opens
     LaunchedEffect(Unit) {
         viewModel.fetchFactories()
     }
@@ -77,7 +72,6 @@ fun ManageFactoryScreen(viewModel: ManageFactoryViewModel = hiltViewModel()) {
 
     var selectedLocations by remember { mutableStateOf(setOf<String>()) }
 
-    // Filter factories based on search text & selected locations
     val filteredFactories = factories.filter {
         val matchText = it.name.contains(searchText, ignoreCase = true) ||
                 it.location.contains(searchText, ignoreCase = true) ||
@@ -85,7 +79,6 @@ fun ManageFactoryScreen(viewModel: ManageFactoryViewModel = hiltViewModel()) {
         val matchLocation = selectedLocations.isEmpty() || it.location in selectedLocations
         matchText && matchLocation
     }
-
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -95,6 +88,15 @@ fun ManageFactoryScreen(viewModel: ManageFactoryViewModel = hiltViewModel()) {
                 .padding(horizontal = 16.dp)
         ) {
             Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "All Factories",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp)
+            )
 
             // --- Search + Filter Row ---
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -103,7 +105,9 @@ fun ManageFactoryScreen(viewModel: ManageFactoryViewModel = hiltViewModel()) {
                     query = searchText,
                     onQueryChange = { searchText = it },
                     placeholderText = "Search factories",
-                    modifier = Modifier.weight(1f).padding(end = 8.dp)
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 8.dp)
                 )
 
                 // Filter Button
@@ -126,7 +130,6 @@ fun ManageFactoryScreen(viewModel: ManageFactoryViewModel = hiltViewModel()) {
                         tint = if (selectedLocations.isNotEmpty()) Color.Black else Color(0xFF333333),
                         modifier = Modifier.size(24.dp)
                     )
-
                 }
             }
 
@@ -166,7 +169,7 @@ fun ManageFactoryScreen(viewModel: ManageFactoryViewModel = hiltViewModel()) {
                                 FactoryCard(
                                     factory = factory,
                                     allLocations = allLocations,
-                                    viewModel = viewModel // pass it here
+                                    viewModel = viewModel
                                 )
                             }
                         }
@@ -188,7 +191,7 @@ fun ManageFactoryScreen(viewModel: ManageFactoryViewModel = hiltViewModel()) {
         }
     }
 
-    //  FILTER DIALOG
+    // -------------------- Filter Dialog --------------------
     if (showFilterDialog) {
         var query by remember { mutableStateOf("") }
         AlertDialog(
@@ -203,7 +206,6 @@ fun ManageFactoryScreen(viewModel: ManageFactoryViewModel = hiltViewModel()) {
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
 
-                    // Search Field
                     OutlinedTextField(
                         value = query,
                         onValueChange = { query = it },
@@ -283,12 +285,15 @@ fun ManageFactoryScreen(viewModel: ManageFactoryViewModel = hiltViewModel()) {
         )
     }
 
-    //  ADD FACTORY DIALOG
+    // -------------------- Add Factory Dialog --------------------
     if (showAddDialog) {
         var name by remember { mutableStateOf("") }
+        var nameError by remember { mutableStateOf<String?>(null) }
         var location by remember { mutableStateOf("") }
         var expanded by remember { mutableStateOf(false) }
         var query by remember { mutableStateOf("") }
+
+        val context = LocalContext.current
 
         AlertDialog(
             onDismissRequest = { showAddDialog = false },
@@ -302,12 +307,27 @@ fun ManageFactoryScreen(viewModel: ManageFactoryViewModel = hiltViewModel()) {
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
 
+                    // Name with inline validation
                     OutlinedTextField(
                         value = name,
-                        onValueChange = { name = it },
+                        onValueChange = {
+                            name = it
+                            val regex = "^[A-Za-z]+( [A-Za-z]+)*$".toRegex()
+                            nameError = if (it.isBlank() || regex.matches(it)) null else "Only letters are allowed"
+                        },
                         label = { Text("Factory Name") },
+                        isError = nameError != null,
                         modifier = Modifier.fillMaxWidth()
                     )
+
+                    if (nameError != null) {
+                        Text(
+                            text = nameError!!,
+                            color = MaterialTheme.colorScheme.error,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                        )
+                    }
 
                     Spacer(modifier = Modifier.height(8.dp))
 
@@ -367,22 +387,22 @@ fun ManageFactoryScreen(viewModel: ManageFactoryViewModel = hiltViewModel()) {
 
                         Spacer(modifier = Modifier.width(8.dp))
 
-                        val context = LocalContext.current
-
                         Button(
                             onClick = {
-                                if (name.isNotBlank() && query.isNotBlank()) {
-                                    viewModel.createFactory(name, query) { success, message ->
-                                        if (success) {
-                                            showAddDialog = false
+                                when {
+                                    name.isBlank() || query.isBlank() -> {
+                                        Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
+                                    }
+                                    nameError != null -> return@Button
+                                    else -> {
+                                        viewModel.createFactory(name, query) { success, message ->
                                             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                                            viewModel.fetchFactories() // optional refresh if you added this method
-                                        } else {
-                                            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                                            if (success) {
+                                                showAddDialog = false
+                                                viewModel.fetchFactories()
+                                            }
                                         }
                                     }
-                                } else {
-                                    Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
                                 }
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
@@ -390,8 +410,6 @@ fun ManageFactoryScreen(viewModel: ManageFactoryViewModel = hiltViewModel()) {
                         ) {
                             Text("Create Factory", color = Color.White)
                         }
-
-
                     }
                 }
             },
@@ -455,21 +473,21 @@ fun FactoryCard(
 
     val context = LocalContext.current
 
-    // --------------------  Edit Dialog --------------------
+    // -------------------- Edit Dialog --------------------
     if (showEditDialog) {
         val unassignedHeads by viewModel.unassignedPlantHeads.collectAsState()
         val updateMessage by viewModel.updateMessage.collectAsState()
 
         var name by remember { mutableStateOf(factory.name) }
+        var nameError by remember { mutableStateOf<String?>(null) }
+
         var location by remember { mutableStateOf(factory.location) }
+        var locationExpanded by remember { mutableStateOf(false) }
 
         var selectedPlantHead by remember { mutableStateOf(factory.plantheadName ?: "") }
         var selectedPlantHeadId by remember { mutableStateOf<Int?>(null) }
-
         var plantHeadExpanded by remember { mutableStateOf(false) }
-        var locationExpanded by remember { mutableStateOf(false) }
 
-        //  Show toast after update success/failure
         LaunchedEffect(updateMessage) {
             updateMessage?.let { msg ->
                 Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
@@ -487,20 +505,33 @@ fun FactoryCard(
             text = {
                 Column {
                     Text("Edit Factory", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // Name
+                    // --- Name field with regex validation ---
                     OutlinedTextField(
                         value = name,
-                        onValueChange = { name = it },
+                        onValueChange = {
+                            name = it
+                            val regex = "^[A-Za-z]+( [A-Za-z]+)*$".toRegex()
+                            nameError = if (it.isBlank() || regex.matches(it)) null else "Only letters and spaces allowed"
+                        },
                         label = { Text("Factory Name") },
+                        isError = nameError != null,
                         modifier = Modifier.fillMaxWidth()
                     )
 
+                    if (nameError != null) {
+                        Text(
+                            text = nameError!!,
+                            color = MaterialTheme.colorScheme.error,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                        )
+                    }
+
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Location Dropdown
+                    // --- Location Dropdown ---
                     ExposedDropdownMenuBox(
                         expanded = locationExpanded,
                         onExpandedChange = { locationExpanded = !locationExpanded }
@@ -538,51 +569,35 @@ fun FactoryCard(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    //  Plant Head Dropdown (API-driven)
-                    // Plant Head Dropdown (API-driven)
+                    // --- Plant Head Dropdown ---
                     ExposedDropdownMenuBox(
                         expanded = plantHeadExpanded,
                         onExpandedChange = { expanded ->
                             plantHeadExpanded = expanded
-                            if (expanded) {
-                                Log.d("API_DEBUG", "Dropdown opened — fetching unassigned plant heads")
-                                viewModel.fetchUnassignedPlantHeads()
-                            }
+                            if (expanded) viewModel.fetchUnassignedPlantHeads()
                         }
                     ) {
                         OutlinedTextField(
                             value = selectedPlantHead,
                             onValueChange = {},
                             label = { Text("Plant Head") },
-                            readOnly = true, //  Important — makes the entire box clickable
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = plantHeadExpanded) },
+                            readOnly = true,
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(plantHeadExpanded) },
                             modifier = Modifier
-                                .menuAnchor(
-                                    type = MenuAnchorType.PrimaryNotEditable, //  for read-only fields
-                                    enabled = true
-                                )
+                                .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true)
                                 .fillMaxWidth()
                                 .clickable {
                                     plantHeadExpanded = !plantHeadExpanded
-                                    if (plantHeadExpanded) {
-                                        Log.d("API_DEBUG", "Text field clicked — fetching unassigned plant heads")
-                                        viewModel.fetchUnassignedPlantHeads()
-                                    }
+                                    if (plantHeadExpanded) viewModel.fetchUnassignedPlantHeads()
                                 }
-
                         )
 
                         val filteredHeads = remember(unassignedHeads, selectedPlantHead) {
-                            if (selectedPlantHead.isBlank()) {
-                                unassignedHeads
-                            } else {
-                                unassignedHeads.filter {
-                                    it.username.contains(selectedPlantHead, ignoreCase = true)
-                                }
+                            if (selectedPlantHead.isBlank()) unassignedHeads
+                            else unassignedHeads.filter {
+                                it.username.contains(selectedPlantHead, ignoreCase = true)
                             }
                         }
-
-
 
                         ExposedDropdownMenu(
                             expanded = plantHeadExpanded,
@@ -607,13 +622,11 @@ fun FactoryCard(
                                 }
                             }
                         }
-
                     }
-
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Update + Cancel buttons
+                    // --- Update + Cancel buttons ---
                     Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
                         TextButton(onClick = { showEditDialog = false }) {
                             Text("Cancel", color = Color.Gray)
@@ -621,6 +634,7 @@ fun FactoryCard(
                         Spacer(modifier = Modifier.width(8.dp))
                         Button(
                             onClick = {
+                                if (nameError != null) return@Button
                                 val req = com.example.partsphere.presentation.owner.model.UpdateFactoryRequest(
                                     name = name,
                                     location = location,
@@ -640,7 +654,7 @@ fun FactoryCard(
         )
     }
 
-    // -------------------- Delete Dialog (unchanged) --------------------
+    // -------------------- Delete Dialog --------------------
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
@@ -651,9 +665,7 @@ fun FactoryCard(
                     onClick = {
                         viewModel.deleteFactory(factory.id) { success, message ->
                             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                            if (success) {
-                                viewModel.fetchFactories()
-                            }
+                            if (success) viewModel.fetchFactories()
                             showDeleteDialog = false
                         }
                     }
@@ -667,5 +679,6 @@ fun FactoryCard(
         )
     }
 }
+
 
 

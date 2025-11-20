@@ -186,4 +186,3 @@ fun formatNumber(value: Float): String {
         else -> value.toInt().toString()
     }
 }
-

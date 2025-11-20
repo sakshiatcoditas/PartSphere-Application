@@ -1,7 +1,8 @@
-package com.example.partsphere.repository
+package com.example.partsphere.presentation.registration.repository
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import com.example.partsphere.model.DistributorRegistrationResponse
 import com.example.partsphere.model.UserRegistrationData
 import com.example.partsphere.network.DistributorApi
@@ -22,18 +23,18 @@ class DistributorRepository @Inject constructor(
     ): Result<DistributorRegistrationResponse> {
         return try {
             // ----------- LOGGING THE FIELDS -----------
-            android.util.Log.d("RegistrationRepo", "Sending registration data:")
-            android.util.Log.d("RegistrationRepo", "username: ${user.username}")
-            android.util.Log.d("RegistrationRepo", "email: ${user.email}")
-            android.util.Log.d("RegistrationRepo", "password: ${user.password}")
-            android.util.Log.d("RegistrationRepo", "phoneNo: ${user.phoneNo}")
-            android.util.Log.d("RegistrationRepo", "companyName: ${user.companyName}")
-            android.util.Log.d("RegistrationRepo", "companyAddress: ${user.companyAddress}")
-            android.util.Log.d("RegistrationRepo", "gstId: ${user.gstId}")
-            android.util.Log.d("RegistrationRepo", "state: ${user.state}")
-            android.util.Log.d("RegistrationRepo", "city: ${user.city}")
-            android.util.Log.d("RegistrationRepo", "pinCode: ${user.pinCode}")
-            android.util.Log.d("RegistrationRepo", "photo: ${user.photo?.path ?: "null"}")
+            Log.d("RegistrationRepo", "Sending registration data:")
+            Log.d("RegistrationRepo", "username: ${user.username}")
+            Log.d("RegistrationRepo", "email: ${user.email}")
+            Log.d("RegistrationRepo", "password: ${user.password}")
+            Log.d("RegistrationRepo", "phoneNo: ${user.phoneNo}")
+            Log.d("RegistrationRepo", "companyName: ${user.companyName}")
+            Log.d("RegistrationRepo", "companyAddress: ${user.companyAddress}")
+            Log.d("RegistrationRepo", "gstId: ${user.gstId}")
+            Log.d("RegistrationRepo", "state: ${user.state}")
+            Log.d("RegistrationRepo", "city: ${user.city}")
+            Log.d("RegistrationRepo", "pinCode: ${user.pinCode}")
+            Log.d("RegistrationRepo", "photo: ${user.photo?.path ?: "null"}")
             // -----------------------------------------
 
             val response: Response<DistributorRegistrationResponse> = api.registerDistributor(
@@ -47,7 +48,8 @@ class DistributorRepository @Inject constructor(
                 state = MultipartUtils.createPartFromString(user.state),
                 city = MultipartUtils.createPartFromString(user.city),
                 pinCode = MultipartUtils.createPartFromString(user.pinCode.toString()),
-                photo = user.photo?.let { MultipartUtils.prepareFilePart(context, "photo", it) }
+                photo = user.photo?.let { MultipartUtils.prepareFilePart(context, "photo", it)
+                }
             )
 
             if (response.isSuccessful && response.body() != null) {

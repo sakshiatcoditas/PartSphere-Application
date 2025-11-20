@@ -24,9 +24,7 @@ class MainActivity : ComponentActivity() {
             PartSphereTheme {
                val rootNavController = rememberNavController()
               RootNavGraph(rootNavController)
-                //OwnerMainScreen(rootNavController)
 
-             //   ReportsScreen()
 
 
 

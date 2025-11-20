@@ -44,14 +44,6 @@ import com.example.partsphere.ui.theme.Black
 import com.example.partsphere.ui.theme.White
 
 
-//data class Product(
-//    val id: Int,
-//    val name: String,
-//    val category: String,
-//    val price: String,
-//    val description: String,
-//    val imageUrl: String? = null
-//)
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -62,7 +54,7 @@ fun AddProductScreen(
     val uiState by viewModel.productUiState.collectAsState()
     val context = LocalContext.current
 
-    // 🔹 Load first page
+    //  Load first page
     LaunchedEffect(Unit) {
         viewModel.fetchProducts(page = 0)
     }
@@ -120,12 +112,12 @@ fun AddProductScreen(
                 text = "All Products",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
+                modifier = Modifier.align(Alignment.Start)
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 🔹 Search + Filter
+            //  Search + Filter
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically

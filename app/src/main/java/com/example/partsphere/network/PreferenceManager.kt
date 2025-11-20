@@ -38,4 +38,10 @@ class PreferenceManager @Inject constructor(
     fun clearRole() {
         prefs.edit().remove(KEY_ROLE).apply()
     }
+
+    fun isLoggedIn(): Boolean {
+        return getToken() != null
+    }
+
+
 }
