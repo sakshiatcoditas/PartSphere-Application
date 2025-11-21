@@ -4,26 +4,25 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.ui.Modifier
-import com.example.partsphere.ui.theme.PartSphereTheme
+import androidx.navigation.compose.rememberNavController
+import com.example.partsphere.navigation.RootNavGraph
+import com.example.partsphere.presentation.login_screen.navigation.LoginNavGraph
 
+import com.example.partsphere.ui.theme.PartSphereTheme
+import dagger.hilt.android.AndroidEntryPoint
+
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
         setContent {
             PartSphereTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    Text(text = "Hello Android!")
-                }
+                val rootNavController = rememberNavController()
+                RootNavGraph(rootNavController)
             }
         }
+
     }
 }

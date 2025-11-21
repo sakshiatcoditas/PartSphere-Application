@@ -12,3 +12,15 @@ val Pink40 = Color(0xFF7D5260)
 
 val White = Color(0xFFFFFFFF)
 val Black = Color(0xFF000000)
+
+
+
+val PrimaryText = Color.Black
+val SecondaryText = Color.Gray
+val Background = Color.White
+val ButtonBackground = Color.Gray
+val ButtonText = Color.White
+val FieldBorderFocused = Color.Black
+val FieldBorderUnfocused = Color.Gray
+val FieldDisabledBorder = Color.Gray
+val FieldCursor = Color.Black

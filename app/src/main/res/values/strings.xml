@@ -15,8 +15,60 @@
     <string name="error_city_invalid">Invalid city name</string>
     <string name="error_state_required">Select a state</string>
     <string name="error_pincode_invalid">Invalid pincode</string>
+    <string name="welcome_back">Welcome Back</string>
+
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="forgot_password">Forgot Password?</string>
+    <string name="login">Login</string>
+    <string name="dont_have_account">Don\'t have an account?</string>
+
 
     <!-- Password -->
     <string name="error_password_invalid">Password must have 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char</string>
     <string name="error_confirm_password_mismatch">Passwords do not match</string>
+    <string name="set_password_title">Set Password</string>
+    <string name="confirm_password">Confirm Password</string>
+
+    <string name="success">Success</string>
+
+    <string name="login_successful">Login successful</string>
+    <string name="unknown_error">Unknown error</string>
+    <string name="wrong_username_or_password">Wrong username or password</string>
+    <string name="network_error">Network Error</string>
+    <string name="server_error">Server Error</string>
+
+    <string name="distributor_dashboard_title">Distributor Dashboard</string>
+    <string name="distributor_dashboard_message">API is working and role-based navigation is correct!</string>
+    <string name="logout">Logout</string>
+    <string name="or">OR</string>
+    <string name="signup_as_distributor">Signup as Distributor</string>
+    <string name="back_to_login">Back to Login</string>
+
+    <string name="company_details_title">Company Details</string>
+    <string name="back">Back</string>
+    <string name="company_business_name">Company / Business Name</string>
+    <string name="gst_id">GST ID</string>
+    <string name="address">Address</string>
+    <string name="city">City</string>
+    <string name="state">State</string>
+    <string name="pincode">Pincode</string>
+    <string name="next">Next</string>
+    <string name="register">Register</string>
+    <string name="thank_you_registration">Thank you for registering with us!</string>
+
+    <string name="create_account">Create Account</string>
+    <string name="enter_details_prompt">Please enter your details to continue registration</string>
+    <string name="avatar">Avatar</string>
+    <string name="add_photo">Add Photo</string>
+    <string name="profile_photo">Profile Photo</string>
+    <string name="full_name">Full Name</string>
+    <string name="phone_number">Phone Number</string>
+    <string name="proceed">Proceed</string>
+    <string name="already_have_account">Already have an account? </string>
+
+
+
+
+
 </resources>
