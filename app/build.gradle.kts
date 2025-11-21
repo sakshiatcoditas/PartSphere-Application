@@ -42,22 +42,26 @@ android {
 }
 
 dependencies {
-    implementation("androidx.navigation:navigation-compose:2.8.7")
-    implementation("io.coil-kt:coil-compose:2.4.0")
-    implementation(libs.dagger.hilt.navigation.compose)
+    implementation(platform(libs.androidx.compose.bom))
 
-    implementation("com.vanniktech:android-image-cropper:4.6.0")
+    // Navigation
+    implementation(libs.navigation.compose)
+    implementation(libs.coil.compose)
+    implementation(libs.image.cropper)
 
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
-    implementation("com.squareup.retrofit2:retrofit:3.0.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-    implementation("com.squareup.okhttp3:logging-interceptor:5.0.0-alpha.14")
-    implementation("androidx.compose.material3:material3:1.2.0")
+    implementation(libs.lifecycle.viewmodel.ktx)
+    implementation(libs.lifecycle.viewmodel.compose)
 
-    implementation("androidx.compose.material3:material3:1.2.0")
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.gson)
+
+    implementation(libs.okhttp.logging)
+
+    implementation(libs.material3)
+
 
     implementation(libs.dagger.hilt)
+    implementation(libs.dagger.hilt.navigation.compose)
 
     // Hilt compiler using KSP
     ksp(libs.dagger.hilt.compiler)
