@@ -27,7 +27,6 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-// -------------------- DATA ------------------------
 
 data class FactoryReport(
     val highestProduct: String,
@@ -56,7 +55,6 @@ val allLocations: List<String> by lazy {
     factoryLocations.values.toSet().sorted()
 }
 
-// --------------------- SCREEN ------------------------
 
 @Composable
 fun ReportsScreen() {
@@ -79,7 +77,6 @@ fun ReportsScreen() {
         }
     }
 
-    // Filter factories by location and search
     val filteredFactories = remember(appliedLocations, debouncedQuery) {
         allFactories
             .filter { factory ->
@@ -157,7 +154,6 @@ fun ReportsScreen() {
     }
 }
 
-// ---------------- COMPONENTS --------------------
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -254,9 +250,9 @@ fun SearchAndFilterRow(
                     )
             ) {
                 Icon(
-                    painter = painterResource(id = R.drawable.filter), // Use your filter drawable
+                    painter = painterResource(id = R.drawable.filter),
                     contentDescription = "Filter by location",
-                    tint = Color.Black, // Icon remains black
+                    tint = Color.Black,
                     modifier = Modifier.size(24.dp)
                 )
             }

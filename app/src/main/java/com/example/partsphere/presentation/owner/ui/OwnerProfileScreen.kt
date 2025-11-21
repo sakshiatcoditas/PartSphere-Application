@@ -40,7 +40,6 @@ fun ProfileScreen(
 ) {
     val profilePrefs = remember { ProfilePreferences(context) }
 
-    // Load saved values from SharedPreferences or defaults
     var profilePhoto by remember {
         mutableStateOf(
             profilePrefs.profileUri?.let { path ->
@@ -55,12 +54,10 @@ fun ProfileScreen(
     var companyName by remember { mutableStateOf(profilePrefs.company ?: "Partsphere") }
     var isEditing by remember { mutableStateOf(false) }
 
-    // Launcher to pick image
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
         onResult = { uri ->
             if (isEditing && uri != null) {
-                // Save image to internal storage
                 val savedPath = saveProfileImageToInternalStorage(context, uri)
                 if (savedPath != null) {
                     profilePhoto = Uri.fromFile(File(savedPath))
@@ -101,7 +98,7 @@ fun ProfileScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 20.dp)
-                .padding(top = 40.dp), // slightly shifted down from top
+                .padding(top = 40.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
@@ -188,14 +185,13 @@ fun ProfileScreen(
                 Button(
                     onClick = {
                         if (isEditing) {
-                            // Save changes to SharedPreferences
                             profilePrefs.name = name
                             profilePrefs.email = email
                             profilePrefs.designation = designation
                             profilePrefs.company = companyName
                             profilePrefs.profileUri = profilePhoto?.path
                         }
-                        isEditing = !isEditing // toggle editing
+                        isEditing = !isEditing
                     },
                     shape = RoundedCornerShape(20.dp),
                     modifier = Modifier
@@ -221,7 +217,6 @@ fun ProfileScreen(
     }
 }
 
-// Helper function to persist image in internal storage
 fun saveProfileImageToInternalStorage(context: Context, uri: Uri): String? {
     return try {
         val inputStream = context.contentResolver.openInputStream(uri)

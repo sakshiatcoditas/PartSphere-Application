@@ -22,7 +22,7 @@ import com.example.partsphere.presentation.owner.ui.manageemployee.PlantHeadScre
 @Composable
 fun OwnerNavGraph(
     navController: NavHostController,
-    rootNavController: NavHostController, // added
+    rootNavController: NavHostController,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current

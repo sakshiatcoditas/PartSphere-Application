@@ -46,7 +46,6 @@ class OwnerHomeViewModel @Inject constructor(
 
 
 
-    // --------------- Factory Location wise count----------------
 
     var factoryLocations = mutableStateOf<List<FactoryLocation>>(emptyList())
         private set

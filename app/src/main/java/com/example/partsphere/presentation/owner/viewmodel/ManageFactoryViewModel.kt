@@ -148,7 +148,7 @@ class ManageFactoryViewModel @Inject constructor(
             val result = repository.createFactory(name, location)
             result.onSuccess { response ->
                 _createMessage.value = response.message
-                fetchFactories() // optional: refresh factory list
+                fetchFactories()
                 onResult(true, response.message)
             }.onFailure { e ->
                 val errorMsg = e.message ?: "Failed to create factory"
@@ -165,7 +165,6 @@ class ManageFactoryViewModel @Inject constructor(
             try {
                 val result = repository.deleteFactory(factoryId)
                 result.onSuccess { message ->
-                    //  Remove deleted factory from list immediately
                     _factories.value = _factories.value.filterNot { it.id == factoryId }
                     onResult(true, message)
                 }.onFailure { e ->
@@ -192,7 +191,7 @@ class ManageFactoryViewModel @Inject constructor(
                     id = coResponse.id,
                     name = coResponse.username,
                     email = coResponse.email,
-                    photoUrl = coResponse.photo // Cloudinary URL from backend
+                    photoUrl = coResponse.photo
                 )
 
                 _uiState.value = _uiState.value.copy(
@@ -265,7 +264,7 @@ class ManageFactoryViewModel @Inject constructor(
     }
 
     fun updateCentralOfficer(
-        context: Context, // add context here
+        context: Context,
         officerId: Int,
         username: String,
         email: String,
@@ -286,7 +285,7 @@ class ManageFactoryViewModel @Inject constructor(
             )
 
             if (result.isSuccess) {
-                fetchCentralOfficers() // refresh list after update
+                fetchCentralOfficers()
                 onResult(true)
             } else {
                 _uiState.update {
@@ -419,18 +418,16 @@ class ManageFactoryViewModel @Inject constructor(
             result.onSuccess { factories ->
                 _supervisorFactories.value = factories
             }.onFailure { e ->
-                // Optional: handle error
                 _supervisorFactories.value = emptyList()
             }
         }
     }
 
-    // ------------------ ADD CHIEF SUPERVISOR ------------------
     fun addChiefSupervisor(
         name: String,
         email: String,
         factoryId: Long,
-        factoryName: String, // keep factoryName for display
+        factoryName: String,
         photoUri: Uri?,
         onResult: (Boolean, String) -> Unit
     ) {
@@ -440,7 +437,6 @@ class ManageFactoryViewModel @Inject constructor(
             val result = repository.addChiefSupervisor(name, email, factoryId, photoUri)
 
             result.onSuccess { supervisor ->
-                // Instead of appending manually, fetch the full list to get the photo
                 fetchChiefSupervisors(loadMore = false)
                 onResult(true, "Supervisor added successfully")
             }.onFailure { e ->
@@ -504,7 +500,7 @@ class ManageFactoryViewModel @Inject constructor(
                 onResult(false, e.message ?: "Failed to delete product")
             }
 
-            _deletingProductIds.update { it - productId } // unmark deleting
+            _deletingProductIds.update { it - productId }
         }
     }
 
@@ -563,9 +559,8 @@ class ManageFactoryViewModel @Inject constructor(
                 _addPlantHeadResult.value = result
 
                 result.onSuccess {
-                    // Refresh lists after successful addition
                     fetchPlantHeads()
-                    fetchUnassignedFactories() // remove assigned factory
+                    fetchUnassignedFactories()
                 }.onFailure { e ->
                     _plantHeadError.value = e.message ?: "Failed to add Plant Head"
                 }

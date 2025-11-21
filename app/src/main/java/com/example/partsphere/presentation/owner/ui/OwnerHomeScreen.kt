@@ -103,7 +103,7 @@ fun ComparisonBarChartCard(
     val maxBarHeight = 160f
     val barWidth = 40.dp
     val horizontalPadding = 12.dp
-    val valueBoxHeight = 20.dp // space for count value above bar
+    val valueBoxHeight = 20.dp
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -151,14 +151,13 @@ fun ComparisonBarChartCard(
                                     .background(barColor, RoundedCornerShape(6.dp))
                             )
 
-                            // Value above the bar, but inside Box
                             Text(
                                 text = formatNumber(value),
                                 fontSize = 12.sp,
                                 color = Color.Black,
                                 modifier = Modifier
                                     .align(Alignment.BottomCenter)
-                                    .offset(y = -(animatedHeight + 4).dp) // position just above bar
+                                    .offset(y = -(animatedHeight + 4).dp)
                             )
                         }
 

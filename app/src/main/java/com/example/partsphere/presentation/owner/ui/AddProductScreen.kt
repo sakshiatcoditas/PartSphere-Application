@@ -66,8 +66,7 @@ fun AddProductScreen(
 
     val listState = rememberLazyListState()
 
-    //  Detect end-of-list for pagination
-    // Detect end-of-list for pagination
+
     LaunchedEffect(listState, uiState) {
         snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
             .collect { lastVisibleItemIndex ->
@@ -75,7 +74,6 @@ fun AddProductScreen(
                 val totalPages = uiState.totalPages
                 val currentPage = uiState.currentPage
 
-                // Trigger next page only if we reach the last visible item
                 if (lastVisibleItemIndex == totalItems - 1 &&
                     !uiState.isLoading &&
                     currentPage + 1 < totalPages
@@ -86,7 +84,6 @@ fun AddProductScreen(
     }
 
 
-    //  Filtered and searched list (from API data)
     val filteredList by remember(uiState.products, searchText, selectedFilters) {
         derivedStateOf {
             uiState.products.filter { product ->
@@ -97,7 +94,7 @@ fun AddProductScreen(
         }
     }
 
-    // --- UI ---
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -117,7 +114,6 @@ fun AddProductScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            //  Search + Filter
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -147,8 +143,7 @@ fun AddProductScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            //  Product list
-            // --- In AddProductScreen LazyColumn ---
+
             LazyColumn(
                 state = listState,
                 verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -201,9 +196,7 @@ fun AddProductScreen(
         }
 
 
-        //
-        //
-        //  Error message (if any)
+
         uiState.error?.let { errorMsg ->
             Box(
                 modifier = Modifier
@@ -277,7 +270,6 @@ fun AddProductDialog(
         onResult = { photoUri = it }
     )
 
-    // --------------- VALIDATION STATES ----------------
     var productNameError by remember { mutableStateOf(false) }
     var quantityError by remember { mutableStateOf(false) }
     var priceError by remember { mutableStateOf(false) }
@@ -417,7 +409,6 @@ fun AddProductDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    // Trigger final validation
                     productNameError = productName.isBlank() || !productName.matches(Regex("^[a-zA-Z\\s]*$"))
                     quantityError = quantity.isBlank() || !quantity.matches(Regex("^[0-9]*$"))
                     priceError = price.isBlank() || !price.matches(Regex("^[0-9]*\\.?[0-9]*$"))
@@ -538,7 +529,6 @@ fun FilterDialog(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                //  Clear Filters Button (always visible)
                 TextButton(onClick = {
                     selected.clear()
                     onClear()
@@ -563,7 +553,6 @@ fun FilterDialog(
 
 
 
-// --- In ProductCard ---
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductCard(

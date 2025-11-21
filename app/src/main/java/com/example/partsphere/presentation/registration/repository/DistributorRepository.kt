@@ -22,7 +22,6 @@ class DistributorRepository @Inject constructor(
         user: UserRegistrationData
     ): Result<DistributorRegistrationResponse> {
         return try {
-            // ----------- LOGGING THE FIELDS -----------
             Log.d("RegistrationRepo", "Sending registration data:")
             Log.d("RegistrationRepo", "username: ${user.username}")
             Log.d("RegistrationRepo", "email: ${user.email}")

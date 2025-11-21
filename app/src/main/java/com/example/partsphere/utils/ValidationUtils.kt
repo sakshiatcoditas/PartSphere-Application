@@ -4,22 +4,17 @@ import android.util.Patterns
 
 object ValidationUtils {
 
-    // Username / Name (keep your version)
     val NAME_REGEX = Regex("^[A-Za-z ]+$")
 
-    // Phone number (strict backend version)
     val PHONE_REGEX = Regex("^[1-9][0-9]{9}$")
 
-    // GST number (update later if needed)
     val GST_REGEX = Regex("^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}Z[A-Z0-9]{1}$")
 
     // PinCode
     val PINCODE_REGEX = Regex("^[1-9][0-9]{5}$")
 
-    // Password (strict version)
     val PASSWORD_REGEX = Regex("^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[@\$!%*?&])[A-Za-z\\d@\$!%*?&]{8,}$")
 
-    // ---------------- Validation Functions ----------------
 
     fun validateName(name: String) = name.isNotBlank() && NAME_REGEX.matches(name)
 

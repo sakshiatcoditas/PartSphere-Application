@@ -50,7 +50,6 @@ fun ManageFactoryScreen(viewModel: ManageFactoryViewModel = hiltViewModel()) {
     val error by viewModel.errorMessage.collectAsState()
     val factoriesState by viewModel.factories.collectAsState()
 
-    // Map API model to UI model
     val factories = factoriesState.map { apiItem ->
         FactoryItem(
             id = apiItem.id,
@@ -285,7 +284,6 @@ fun ManageFactoryScreen(viewModel: ManageFactoryViewModel = hiltViewModel()) {
         )
     }
 
-    // -------------------- Add Factory Dialog --------------------
     if (showAddDialog) {
         var name by remember { mutableStateOf("") }
         var nameError by remember { mutableStateOf<String?>(null) }
@@ -307,7 +305,6 @@ fun ManageFactoryScreen(viewModel: ManageFactoryViewModel = hiltViewModel()) {
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
 
-                    // Name with inline validation
                     OutlinedTextField(
                         value = name,
                         onValueChange = {
@@ -420,7 +417,6 @@ fun ManageFactoryScreen(viewModel: ManageFactoryViewModel = hiltViewModel()) {
 }
 
 
-// ---------------- FACTORY CARD ----------------
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FactoryCard(
@@ -473,7 +469,6 @@ fun FactoryCard(
 
     val context = LocalContext.current
 
-    // -------------------- Edit Dialog --------------------
     if (showEditDialog) {
         val unassignedHeads by viewModel.unassignedPlantHeads.collectAsState()
         val updateMessage by viewModel.updateMessage.collectAsState()
@@ -654,7 +649,6 @@ fun FactoryCard(
         )
     }
 
-    // -------------------- Delete Dialog --------------------
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },

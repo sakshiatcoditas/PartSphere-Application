@@ -41,7 +41,6 @@ import retrofit2.http.Query
 interface DistributorApi {
 
 
-
     @Multipart
     @POST("/auth/signup")
     suspend fun registerDistributor(

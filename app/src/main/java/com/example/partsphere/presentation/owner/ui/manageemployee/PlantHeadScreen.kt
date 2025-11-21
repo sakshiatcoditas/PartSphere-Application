@@ -84,7 +84,7 @@ fun PlantHeadScreen(
                 title = {
                     Text(
                         text = "Plant Heads",
-                        fontWeight = FontWeight.Bold,   //  Make title bold
+                        fontWeight = FontWeight.Bold,
                         color = Color.Black
                     )                        },
                 navigationIcon = {
@@ -204,7 +204,6 @@ fun PlantHeadScreen(
             initialData = currentEditingHead,
             onDismiss = { showDialog = false },
             onAdd = { name, email, designation, factory, photoUri ->
-                // For simplicity, just update local state; API integration for add/edit can be added later
                 showDialog = false
             }
         )
@@ -384,7 +383,6 @@ fun AddPlantHeadDialog(
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(
                         onClick = {
-                            // Trigger validation
                             nameError = name.text.isBlank()
                             emailError = email.text.isBlank() ||
                                     !android.util.Patterns.EMAIL_ADDRESS.matcher(email.text).matches()
@@ -405,7 +403,6 @@ fun AddPlantHeadDialog(
 }
 
 
-// ---------------- PLANT HEAD CARD ----------------
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlantHeadCard(

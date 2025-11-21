@@ -22,6 +22,9 @@ class LoginViewModel @Inject constructor(
     private val prefs: PreferenceManager
 ) : ViewModel() {
 
+    var email by mutableStateOf("")
+    var password by mutableStateOf("")
+
     fun getPrefs(): PreferenceManager = prefs
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
@@ -31,7 +34,6 @@ class LoginViewModel @Inject constructor(
     var fieldErrors by mutableStateOf<Map<String, String>>(emptyMap())
         private set
 
-    // Function to validate email and password
     fun validateInputs(): Boolean {
         val errors = mutableMapOf<String, String>()
 
@@ -80,6 +82,5 @@ class LoginViewModel @Inject constructor(
         }
     }
 
-    var email by mutableStateOf("")
-    var password by mutableStateOf("")
+
 }

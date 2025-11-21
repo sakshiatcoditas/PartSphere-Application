@@ -11,10 +11,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.partsphere.R
 import com.example.partsphere.ui.theme.Black
 import com.example.partsphere.utils.RegistrationState
 import com.example.partsphere.utils.Field
@@ -29,12 +32,12 @@ fun SetPasswordScreen(
 ) {
     val context = LocalContext.current
 
-
-// Directly observe state (not derivedStateOf)
     val registrationState = viewModel.registrationState
     val fieldErrors = viewModel.fieldErrors
 
-// Automatically navigate on success
+    var passwordVisible by remember { mutableStateOf(false) }
+    var confirmPasswordVisible by remember { mutableStateOf(false) }
+
     LaunchedEffect(registrationState) {
         if (registrationState is RegistrationState.Success) {
             onRegisterClick()
@@ -74,9 +77,20 @@ fun SetPasswordScreen(
                 value = viewModel.password,
                 onValueChange = { viewModel.password = it },
                 label = { Text("Password", color = Black) },
-                visualTransformation = PasswordVisualTransformation(),
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
+                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                        Icon(
+                            painter = painterResource(
+                                id = if (passwordVisible) R.drawable.visibility else R.drawable.visibility_off
+                            ),
+                            contentDescription = if (passwordVisible) "Hide password" else "Show password",
+                            tint = Color.Gray
+                        )
+                    }
+                },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
             )
             fieldErrors[Field.PASSWORD]?.let { error ->
@@ -85,13 +99,25 @@ fun SetPasswordScreen(
 
             Spacer(Modifier.height(16.dp))
 
+            //  CONFIRM PASSWORD WITH VISIBILITY TOGGLE
             OutlinedTextField(
                 value = viewModel.confirmPassword,
                 onValueChange = { viewModel.confirmPassword = it },
                 label = { Text("Confirm Password", color = Black) },
-                visualTransformation = PasswordVisualTransformation(),
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
+                visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
+                        Icon(
+                            painter = painterResource(
+                                id = if (confirmPasswordVisible) R.drawable.visibility else R.drawable.visibility_off
+                            ),
+                            contentDescription = if (confirmPasswordVisible) "Hide password" else "Show password",
+                            tint = Color.Gray
+                        )
+                    }
+                },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
             )
             fieldErrors[Field.CONFIRM_PASSWORD]?.let { error ->
@@ -113,22 +139,15 @@ fun SetPasswordScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            // Show loading or error
             when (registrationState) {
-                is RegistrationState.Loading -> {
+                is RegistrationState.Loading ->
                     CircularProgressIndicator(modifier = Modifier.padding(top = 16.dp))
-                }
-                is RegistrationState.Error -> {
-                    Text(
-                        text = registrationState.field,
-                        color = Color.Red,
-                        modifier = Modifier.padding(top = 16.dp)
-                    )
-                }
+
+                is RegistrationState.Error ->
+                    Text(registrationState.field, color = Color.Red, modifier = Modifier.padding(top = 16.dp))
+
                 else -> {}
             }
         }
     }
-
-
 }

@@ -19,7 +19,6 @@ class RegistrationViewModel @Inject constructor(
     private val repository: DistributorRepository
 ) : ViewModel() {
 
-    // ------------------- User Inputs -------------------
     var username by mutableStateOf("")
     var email by mutableStateOf("")
     var phoneNo by mutableStateOf("")
@@ -33,33 +32,27 @@ class RegistrationViewModel @Inject constructor(
     var confirmPassword by mutableStateOf("")
     var photoUri by mutableStateOf<Uri?>(null)
 
-    // Field Errors
     var fieldErrors by mutableStateOf<Map<Field, String>>(emptyMap())
         private set
 
-    // Registration State
     var registrationState by mutableStateOf<RegistrationState>(RegistrationState.Idle)
         private set
 
-    // ------------------- Validation -------------------
     fun validatePersonalDetails(): Boolean {
         val errors = mutableMapOf<Field, String>()
 
-        // Full Name: letters and spaces only, cannot be blank
         if (username.isBlank()) {
             errors[Field.FULL_NAME] = "Full name is required"
         } else if (!ValidationUtils.validateName(username)) {
             errors[Field.FULL_NAME] = "Name must contain only letters"
         }
 
-        // Email: regex + valid email format
         if (email.isBlank()) {
             errors[Field.EMAIL] = "Email is required"
         } else if (!ValidationUtils.validateEmail(email)) {
             errors[Field.EMAIL] = "Enter a valid email address"
         }
 
-        // Phone Number: 10 digits, cannot start with 0
         if (phoneNo.isBlank()) {
             errors[Field.PHONE] = "Phone number is required"
         } else if (!ValidationUtils.validatePhone(phoneNo)) {
@@ -128,7 +121,6 @@ class RegistrationViewModel @Inject constructor(
         return errors.isEmpty()
     }
 
-    // ------------------- Registration -------------------
     fun performRegistration(context: Context) {
         if (!validatePersonalDetails() || !validateCompanyDetails() || !validatePasswordDetails()) {
             registrationState = RegistrationState.Idle

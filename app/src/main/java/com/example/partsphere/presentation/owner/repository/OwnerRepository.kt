@@ -259,7 +259,7 @@ class OwnerRepository @Inject constructor(
                 val requestBody = bytes.toRequestBody("image/*".toMediaTypeOrNull())
                 MultipartBody.Part.createFormData(
                     "photo",
-                    "image.jpg", // name doesn't matter much
+                    "image.jpg",
                     requestBody
                 )
             }

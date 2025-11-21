@@ -3,6 +3,6 @@ package com.example.partsphere.utils
 sealed class RegistrationState {
     object Idle : RegistrationState()
     object Loading : RegistrationState()
-    object Success : RegistrationState() // registration successful
-    data class Error(val field: String) : RegistrationState() // field that has error
+    object Success : RegistrationState()
+    data class Error(val field: String) : RegistrationState()
 }

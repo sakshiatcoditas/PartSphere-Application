@@ -19,30 +19,37 @@ fun RootNavGraph(rootNavController: NavHostController, modifier: Modifier = Modi
     val context = LocalContext.current
     val prefs = PreferenceManager(context)
 
+    val token = prefs.getToken()
+    val role = prefs.getRole()
+
+    val startDestination = when {
+        token.isNullOrEmpty() -> LoginRoute.Login.route
+        role == "OWNER" -> "owner_graph"
+        role == "DISTRIBUTOR" -> "distributor_graph"
+        else -> LoginRoute.Login.route
+    }
+
     NavHost(
         navController = rootNavController,
-        startDestination = LoginRoute.Login.route,
+        startDestination = startDestination,
         modifier = modifier
     ) {
 
-        // Login Flow
         composable(LoginRoute.Login.route) {
             LoginNavGraph(rootNavController)
         }
 
-        // Registration Flow
         composable(LoginRoute.Registration.route) {
             RegistrationNavGraph(rootNavController)
         }
 
-        // Owner Flow
         composable("owner_graph") {
             OwnerDashboardScreen(rootNavController)
         }
 
-        // Distributor Flow
         composable("distributor_graph") {
             DistributorDashboardScreen(rootNavController, prefs)
         }
     }
 }
+

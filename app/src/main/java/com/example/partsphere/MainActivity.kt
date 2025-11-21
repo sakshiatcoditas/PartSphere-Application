@@ -26,10 +26,6 @@ class MainActivity : ComponentActivity() {
               RootNavGraph(rootNavController)
 
 
-
-
-
-
             }
         }
 

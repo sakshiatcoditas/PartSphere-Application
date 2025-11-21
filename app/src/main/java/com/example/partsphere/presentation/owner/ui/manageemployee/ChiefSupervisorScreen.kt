@@ -37,7 +37,6 @@ import com.example.partsphere.presentation.owner.model.AddChiefSupervisorRespons
 import com.example.partsphere.presentation.owner.ui.components.SearchBar
 import com.example.partsphere.presentation.owner.viewmodel.ManageFactoryViewModel
 
-// ---------------- CHIEF SUPERVISOR SCREEN ----------------
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChiefSupervisorScreen(
@@ -51,7 +50,6 @@ fun ChiefSupervisorScreen(
 
     val listState = rememberLazyListState()
 
-    // Fetch supervisors and factories when screen opens
     LaunchedEffect(Unit) {
         viewModel.fetchChiefSupervisors(loadMore = false)
         viewModel.fetchFactoriesForSupervisor()

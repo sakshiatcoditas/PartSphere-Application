@@ -42,13 +42,13 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 
-// --- Data model ---
+
 data class CentralOfficer(
     val id:Int,
     val name: String,
     val email: String,
-    val photoUrl: String? = null,   // for fetched image (Cloudinary URL)
-    val localPhotoUri: Uri? = null  // for temporary local image before upload
+    val photoUrl: String? = null,
+    val localPhotoUri: Uri? = null
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -156,7 +156,7 @@ fun CentralOfficerScreen(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(200.dp) // fixed height prevents infinite measurement
+                                .height(200.dp)
                                 .padding(top = 100.dp),
                             contentAlignment = Alignment.Center
                         ) {
@@ -173,7 +173,6 @@ fun CentralOfficerScreen(
                         )
                     }
 
-                    // --- Show bottom loader when loading next page ---
                     if (uiState.isLoading && uiState.officers.isNotEmpty()) {
                         item {
                             Box(
@@ -190,21 +189,18 @@ fun CentralOfficerScreen(
             }
         }
 
-        // --- Loading overlay for first page ---
         if (uiState.isLoading && uiState.officers.isEmpty()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
         }
 
-        // --- Error toast ---
         uiState.error?.let { error ->
             LaunchedEffect(error) {
                 Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
             }
         }
 
-        // --- Add/Edit dialog ---
         if (showDialog) {
             AddCentralOfficerDialog(
                 onDismiss = { showDialog = false },
@@ -358,7 +354,6 @@ fun CentralOfficerCard(
                         Toast.makeText(context, "Edited successfully", Toast.LENGTH_SHORT).show()
                         showEditDialog = false
 
-                        //  Refresh list to reflect latest data
                         viewModel.fetchCentralOfficers()
                     } else {
                         Toast.makeText(context, "Edit failed. Please try again.", Toast.LENGTH_SHORT).show()
@@ -413,7 +408,7 @@ fun AddCentralOfficerDialog(
                     contentAlignment = Alignment.Center
                 ) {
                     when {
-                        photoUri != null -> { // user picked new photo
+                        photoUri != null -> {
                             Image(
                                 painter = rememberAsyncImagePainter(photoUri),
                                 contentDescription = "Selected Photo",
@@ -421,7 +416,7 @@ fun AddCentralOfficerDialog(
                                 modifier = Modifier.fillMaxSize()
                             )
                         }
-                        initialData?.photoUrl != null -> { // existing photo from backend
+                        initialData?.photoUrl != null -> {
                             Image(
                                 painter = rememberAsyncImagePainter(initialData.photoUrl),
                                 contentDescription = "Existing Photo",
@@ -502,7 +497,6 @@ fun AddCentralOfficerDialog(
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(
                         onClick = {
-                            // --- Validation checks ---
                             var valid = true
                             if (name.text.isBlank()) {
                                 nameError = "Name cannot be empty"

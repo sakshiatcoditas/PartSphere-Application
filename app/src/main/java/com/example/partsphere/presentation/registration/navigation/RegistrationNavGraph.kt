@@ -13,7 +13,6 @@ import com.example.partsphere.presentation.registration.viewmodel.RegistrationVi
 @Composable
 fun RegistrationNavGraph(rootNavController: NavHostController) {
     val viewModel: RegistrationViewModel = hiltViewModel()
-    // separate NavController for internal registration navigation to avoid conflicts
     val registrationNavController = rememberNavController()
 
     NavHost(
@@ -29,7 +28,6 @@ fun RegistrationNavGraph(rootNavController: NavHostController) {
                     }
                 },
                 onLoginClick = {
-                    // Navigate to login in the root graph
                     rootNavController.navigate(LoginRoute.Login.route) {
                         popUpTo(LoginRoute.Registration.route) { inclusive = true }
                     }
@@ -64,7 +62,6 @@ fun RegistrationNavGraph(rootNavController: NavHostController) {
         composable(Route.Success.route) {
             SuccessScreen(
                 onBackToLoginClick = {
-                    // Navigate to login in the root graph
                     rootNavController.navigate(LoginRoute.Login.route) {
                         popUpTo(LoginRoute.Registration.route) { inclusive = true }
                     }
